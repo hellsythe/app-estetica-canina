@@ -1,7 +1,3 @@
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-here';
-
 export interface User {
   id: number;
   email: string;
@@ -57,12 +53,24 @@ export const authenticateUser = async (email: string, password: string): Promise
 };
 
 export const generateToken = (user: User): string => {
-  return jwt.sign({ user }, JWT_SECRET, { expiresIn: '24h' });
+  const token = {
+    user,
+    iat: Date.now(),
+    exp: Date.now() + (24 * 60 * 60 * 1000) // 24 horas
+  };
+  return btoa(JSON.stringify(token));
 };
 
 export const verifyToken = (token: string): AuthToken | null => {
   try {
-    return jwt.verify(token, JWT_SECRET) as AuthToken;
+    const decoded = JSON.parse(atob(token)) as AuthToken;
+    
+    // Verificar si el token ha expirado
+    if (decoded.exp < Date.now()) {
+      return null;
+    }
+    
+    return decoded;
   } catch (error) {
     return null;
   }
