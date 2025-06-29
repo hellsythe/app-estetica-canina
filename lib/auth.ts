@@ -102,7 +102,8 @@ export const modulePermissions = {
   billing: ['admin', 'manager'],
   reports: ['admin', 'manager'],
   'cash-register': ['admin', 'manager'],
-  settings: ['admin']
+  settings: ['admin'],
+  profile: ['admin', 'manager', 'employee'] // Todos pueden acceder a su perfil
 };
 
 export const canAccessModule = (userRole: string, module: string): boolean => {

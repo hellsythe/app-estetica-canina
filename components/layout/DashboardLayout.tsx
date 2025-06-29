@@ -71,6 +71,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -316,16 +317,59 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 )}
               </div>
               
-              {/* User info in top bar for mobile */}
-              <div className="md:hidden flex items-center space-x-2">
-                <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
-                  <span className="text-sm font-medium text-white">
-                    {user?.avatar || user?.name?.charAt(0) || 'U'}
-                  </span>
-                </div>
-                <Badge className={`text-xs ${getRoleColor(user?.role || '')}`}>
-                  {getRoleText(user?.role || '')}
-                </Badge>
+              {/* User Profile Menu */}
+              <div className="relative">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="flex items-center space-x-2 p-1"
+                  onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                >
+                  <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
+                    <span className="text-sm font-medium text-white">
+                      {user?.avatar || user?.name?.charAt(0) || 'U'}
+                    </span>
+                  </div>
+                  <div className="hidden md:block text-left">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{user?.name}</p>
+                    <Badge className={`text-xs ${getRoleColor(user?.role || '')}`}>
+                      {getRoleText(user?.role || '')}
+                    </Badge>
+                  </div>
+                </Button>
+
+                {/* Profile Dropdown */}
+                {profileMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700">
+                    <Link
+                      href="/profile"
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      onClick={() => setProfileMenuOpen(false)}
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Mi Perfil
+                    </Link>
+                    <Link
+                      href="/settings"
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      onClick={() => setProfileMenuOpen(false)}
+                    >
+                      <Settings className="h-4 w-4 mr-2" />
+                      Configuración
+                    </Link>
+                    <div className="border-t border-gray-100 dark:border-gray-600"></div>
+                    <button
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Cerrar Sesión
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
