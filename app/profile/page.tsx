@@ -32,6 +32,10 @@ import {
   Smartphone
 } from 'lucide-react';
 
+interface ErrorState {
+  [key: string]: string;
+}
+
 export default function ProfilePage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('personal');
@@ -77,7 +81,7 @@ export default function ProfilePage() {
   });
 
   const [profileImage, setProfileImage] = useState(user?.avatar || '');
-  const [errors, setErrors] = useState<any>({});
+  const [errors, setErrors] = useState<ErrorState>({});
   const [successMessage, setSuccessMessage] = useState('');
 
   const tabs = [
@@ -94,7 +98,7 @@ export default function ProfilePage() {
     }));
     
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev: ErrorState) => ({
         ...prev,
         [field]: ''
       }));
@@ -108,7 +112,7 @@ export default function ProfilePage() {
     }));
     
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev: ErrorState) => ({
         ...prev,
         [field]: ''
       }));
@@ -119,7 +123,7 @@ export default function ProfilePage() {
     setPreferences(prev => ({
       ...prev,
       [category]: {
-        ...prev[category],
+        ...prev[category as keyof typeof prev],
         [field]: value
       }
     }));
@@ -138,7 +142,7 @@ export default function ProfilePage() {
   };
 
   const validatePersonalData = () => {
-    const newErrors: any = {};
+    const newErrors: ErrorState = {};
 
     if (!personalData.name.trim()) {
       newErrors.name = 'El nombre es requerido';
@@ -159,7 +163,7 @@ export default function ProfilePage() {
   };
 
   const validatePassword = () => {
-    const newErrors: any = {};
+    const newErrors: ErrorState = {};
 
     if (!passwordData.currentPassword) {
       newErrors.currentPassword = 'La contraseña actual es requerida';
