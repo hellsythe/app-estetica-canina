@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import { canAccessModule } from '@/lib/auth';
 import { 
   LayoutDashboard, 
   Users, 
@@ -22,36 +24,42 @@ import {
   Search,
   Bell,
   Megaphone,
-  Receipt
+  Receipt,
+  Shield,
+  User,
+  Briefcase
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Empleados', href: '/employees', icon: Users },
-  { name: 'Clientes', href: '/clients', icon: Users },
-  { name: 'Servicios', href: '/services', icon: Scissors },
-  { name: 'Citas', href: '/appointments', icon: Calendar },
-  { name: 'Mensajería', href: '/messages', icon: MessageSquare },
-  { name: 'Punto de Venta', href: '/pos', icon: ShoppingCart },
-  { name: 'Productos', href: '/products', icon: Package },
-  { name: 'Cupones', href: '/coupons', icon: Ticket },
-  { name: 'Marketing', href: '/marketing', icon: Megaphone },
-  { name: 'Redes Sociales', href: '/social-sharing', icon: Share2 },
-  { name: 'Facturación', href: '/billing', icon: Receipt },
-  { name: 'Reportes', href: '/reports', icon: BarChart3 },
-  { name: 'Corte de Caja', href: '/cash-register', icon: Calculator },
-  { name: 'Configuración', href: '/settings', icon: Settings },
+  { name: 'Dashboard', href: '/', icon: LayoutDashboard, module: 'dashboard' },
+  { name: 'Empleados', href: '/employees', icon: Users, module: 'employees' },
+  { name: 'Clientes', href: '/clients', icon: Users, module: 'clients' },
+  { name: 'Servicios', href: '/services', icon: Scissors, module: 'services' },
+  { name: 'Citas', href: '/appointments', icon: Calendar, module: 'appointments' },
+  { name: 'Mensajería', href: '/messages', icon: MessageSquare, module: 'messages' },
+  { name: 'Punto de Venta', href: '/pos', icon: ShoppingCart, module: 'pos' },
+  { name: 'Productos', href: '/products', icon: Package, module: 'products' },
+  { name: 'Cupones', href: '/coupons', icon: Ticket, module: 'coupons' },
+  { name: 'Marketing', href: '/marketing', icon: Megaphone, module: 'marketing' },
+  { name: 'Redes Sociales', href: '/social-sharing', icon: Share2, module: 'social-sharing' },
+  { name: 'Facturación', href: '/billing', icon: Receipt, module: 'billing' },
+  { name: 'Reportes', href: '/reports', icon: BarChart3, module: 'reports' },
+  { name: 'Corte de Caja', href: '/cash-register', icon: Calculator, module: 'cash-register' },
+  { name: 'Configuración', href: '/settings', icon: Settings, module: 'settings' },
 ];
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, logout } = useAuth();
 
   // Function to check if the current path matches the navigation item
   const isCurrentPath = (href: string) => {
@@ -59,6 +67,55 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       return pathname === '/';
     }
     return pathname.startsWith(href);
+  };
+
+  // Filter navigation items based on user permissions
+  const filteredNavigation = navigation.filter(item => 
+    user ? canAccessModule(user.role, item.module) : false
+  );
+
+  const handleLogout = () => {
+    logout();
+    router.push('/login');
+  };
+
+  const getRoleIcon = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return <Shield className="h-4 w-4" />;
+      case 'manager':
+        return <Briefcase className="h-4 w-4" />;
+      case 'employee':
+        return <User className="h-4 w-4" />;
+      default:
+        return <User className="h-4 w-4" />;
+    }
+  };
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'bg-red-100 text-red-800';
+      case 'manager':
+        return 'bg-blue-100 text-blue-800';
+      case 'employee':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getRoleText = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'Administrador';
+      case 'manager':
+        return 'Gerente';
+      case 'employee':
+        return 'Empleado';
+      default:
+        return 'Usuario';
+    }
   };
 
   return (
@@ -82,7 +139,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <h1 className="text-xl font-bold text-blue-600">PetStyle Pro</h1>
             </div>
             <nav className="mt-5 px-2 space-y-1">
-              {navigation.map((item) => {
+              {filteredNavigation.map((item) => {
                 const current = isCurrentPath(item.href);
                 return (
                   <Link
@@ -114,7 +171,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <h1 className="text-xl font-bold text-blue-600">PetStyle Pro</h1>
               </div>
               <nav className="mt-8 flex-1 px-2 space-y-1">
-                {navigation.map((item) => {
+                {filteredNavigation.map((item) => {
                   const current = isCurrentPath(item.href);
                   return (
                     <Link
@@ -134,19 +191,34 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </nav>
             </div>
             <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
-              <div className="flex items-center">
+              <div className="flex items-center w-full">
                 <div className="flex-shrink-0">
                   <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
-                    <span className="text-sm font-medium text-white">A</span>
+                    <span className="text-sm font-medium text-white">
+                      {user?.avatar || user?.name?.charAt(0) || 'U'}
+                    </span>
                   </div>
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-700">Admin</p>
-                  <Button variant="ghost" size="sm" className="text-xs text-gray-500 p-0 h-auto">
-                    <LogOut className="h-3 w-3 mr-1" />
-                    Salir
-                  </Button>
+                <div className="ml-3 flex-1">
+                  <p className="text-sm font-medium text-gray-700">{user?.name}</p>
+                  <div className="flex items-center gap-2">
+                    <Badge className={`text-xs ${getRoleColor(user?.role || '')}`}>
+                      <div className="flex items-center gap-1">
+                        {getRoleIcon(user?.role || '')}
+                        {getRoleText(user?.role || '')}
+                      </div>
+                    </Badge>
+                  </div>
                 </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleLogout}
+                  className="text-xs text-gray-500 p-1 h-auto"
+                  title="Cerrar sesión"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           </div>
@@ -182,10 +254,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 </div>
               </div>
             </div>
-            <div className="ml-4 flex items-center md:ml-6">
+            <div className="ml-4 flex items-center md:ml-6 space-x-4">
               <Button variant="ghost" size="sm" className="p-1">
                 <Bell className="h-6 w-6" />
               </Button>
+              
+              {/* User info in top bar for mobile */}
+              <div className="md:hidden flex items-center space-x-2">
+                <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
+                  <span className="text-sm font-medium text-white">
+                    {user?.avatar || user?.name?.charAt(0) || 'U'}
+                  </span>
+                </div>
+                <Badge className={`text-xs ${getRoleColor(user?.role || '')}`}>
+                  {getRoleText(user?.role || '')}
+                </Badge>
+              </div>
             </div>
           </div>
         </div>
