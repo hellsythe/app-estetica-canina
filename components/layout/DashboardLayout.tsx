@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { canAccessModule } from '@/lib/auth';
+import { useTheme } from '@/contexts/ThemeContext';
 import { 
   LayoutDashboard, 
   Users, 
@@ -27,11 +28,21 @@ import {
   Receipt,
   Shield,
   User,
-  Briefcase
+  Briefcase,
+  Moon,
+  Sun,
+  AlertTriangle,
+  Clock,
+  CheckCircle,
+  MessageCircle,
+  DollarSign
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import NotificationPanel from '@/components/ui/NotificationPanel';
+import SearchPanel from '@/components/ui/SearchPanel';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -57,9 +68,13 @@ const navigation = [
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   // Function to check if the current path matches the navigation item
   const isCurrentPath = (href: string) => {
@@ -95,13 +110,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'admin':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       case 'manager':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
       case 'employee':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
     }
   };
 
@@ -118,12 +133,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+    if (term.length > 0) {
+      setSearchOpen(true);
+    } else {
+      setSearchOpen(false);
+    }
+  };
+
   return (
-    <div className="h-screen flex overflow-hidden bg-gray-100">
+    <div className="h-screen flex overflow-hidden bg-gray-100 dark:bg-gray-900">
       {/* Mobile sidebar */}
       <div className={`fixed inset-0 flex z-40 md:hidden ${sidebarOpen ? '' : 'hidden'}`}>
         <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-        <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+        <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white dark:bg-gray-800">
           <div className="absolute top-0 right-0 -mr-12 pt-2">
             <Button
               variant="ghost"
@@ -136,7 +160,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
           <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
             <div className="flex-shrink-0 flex items-center px-4">
-              <h1 className="text-xl font-bold text-blue-600">PetStyle Pro</h1>
+              <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">PetStyle Pro</h1>
             </div>
             <nav className="mt-5 px-2 space-y-1">
               {filteredNavigation.map((item) => {
@@ -147,8 +171,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     href={item.href}
                     className={`group flex items-center px-2 py-2 text-base font-medium rounded-md transition-colors ${
                       current
-                        ? 'bg-blue-100 text-blue-900'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                        ? 'bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white'
                     }`}
                     onClick={() => setSidebarOpen(false)}
                   >
@@ -165,10 +189,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Static sidebar for desktop */}
       <div className="hidden md:flex md:flex-shrink-0">
         <div className="flex flex-col w-64">
-          <div className="flex flex-col h-0 flex-1 bg-white shadow-lg">
+          <div className="flex flex-col h-0 flex-1 bg-white dark:bg-gray-800 shadow-lg">
             <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
               <div className="flex items-center flex-shrink-0 px-4">
-                <h1 className="text-xl font-bold text-blue-600">PetStyle Pro</h1>
+                <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">PetStyle Pro</h1>
               </div>
               <nav className="mt-8 flex-1 px-2 space-y-1">
                 {filteredNavigation.map((item) => {
@@ -179,8 +203,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       href={item.href}
                       className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
                         current
-                          ? 'bg-blue-100 text-blue-900'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          ? 'bg-blue-100 text-blue-900 dark:bg-blue-900 dark:text-blue-100'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white'
                       }`}
                     >
                       <item.icon className="mr-3 h-5 w-5" />
@@ -190,7 +214,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 })}
               </nav>
             </div>
-            <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
+            <div className="flex-shrink-0 flex border-t border-gray-200 dark:border-gray-700 p-4">
               <div className="flex items-center w-full">
                 <div className="flex-shrink-0">
                   <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
@@ -200,7 +224,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   </div>
                 </div>
                 <div className="ml-3 flex-1">
-                  <p className="text-sm font-medium text-gray-700">{user?.name}</p>
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-200">{user?.name}</p>
                   <div className="flex items-center gap-2">
                     <Badge className={`text-xs ${getRoleColor(user?.role || '')}`}>
                       <div className="flex items-center gap-1">
@@ -214,7 +238,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   variant="ghost" 
                   size="sm" 
                   onClick={handleLogout}
-                  className="text-xs text-gray-500 p-1 h-auto"
+                  className="text-xs text-gray-500 dark:text-gray-400 p-1 h-auto"
                   title="Cerrar sesión"
                 >
                   <LogOut className="h-4 w-4" />
@@ -239,25 +263,58 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
         
         {/* Top bar */}
-        <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
             <div className="flex-1 flex">
               <div className="w-full flex md:ml-0">
-                <div className="relative w-full text-gray-400 focus-within:text-gray-600">
+                <div className="relative w-full text-gray-400 focus-within:text-gray-600 dark:focus-within:text-gray-300">
                   <div className="absolute inset-y-0 left-0 flex items-center pointer-events-none">
                     <Search className="h-5 w-5" />
                   </div>
                   <Input
-                    className="block w-full pl-8 pr-3 py-2 border-transparent placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-0 focus:border-transparent sm:text-sm"
+                    className="block w-full pl-8 pr-3 py-2 border-transparent placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 dark:focus:placeholder-gray-300 focus:ring-0 focus:border-transparent sm:text-sm bg-transparent dark:text-white"
                     placeholder="Buscar clientes, citas, productos..."
+                    value={searchTerm}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    onFocus={() => searchTerm && setSearchOpen(true)}
                   />
                 </div>
               </div>
             </div>
             <div className="ml-4 flex items-center md:ml-6 space-x-4">
-              <Button variant="ghost" size="sm" className="p-1">
-                <Bell className="h-6 w-6" />
+              {/* Theme Toggle */}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={toggleTheme}
+                className="p-1"
+                title={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
+              >
+                {theme === 'dark' ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
               </Button>
+
+              {/* Notifications */}
+              <div className="relative">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="p-1 relative"
+                  onClick={() => setNotificationsOpen(!notificationsOpen)}
+                >
+                  <Bell className="h-6 w-6" />
+                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                    3
+                  </span>
+                </Button>
+                
+                {notificationsOpen && (
+                  <NotificationPanel onClose={() => setNotificationsOpen(false)} />
+                )}
+              </div>
               
               {/* User info in top bar for mobile */}
               <div className="md:hidden flex items-center space-x-2">
@@ -273,6 +330,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
           </div>
         </div>
+
+        {/* Search Results Panel */}
+        {searchOpen && (
+          <SearchPanel 
+            searchTerm={searchTerm} 
+            onClose={() => setSearchOpen(false)}
+            onNavigate={(path) => {
+              router.push(path);
+              setSearchOpen(false);
+              setSearchTerm('');
+            }}
+          />
+        )}
 
         {/* Page content */}
         <main className="flex-1 relative overflow-y-auto focus:outline-none">
