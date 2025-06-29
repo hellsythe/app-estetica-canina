@@ -4,19 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  X,
-  AlertTriangle,
-  MessageSquare,
-  Clock,
-  DollarSign,
-  Calendar,
-  Package,
-  CheckCircle,
-  Bell,
-  Trash2,
-  MarkAsRead
-} from 'lucide-react';
+import { X, AlertTriangle, MessageSquare, Clock, DollarSign, Calendar, Package, CheckCircle, Bell, Trash2, BookMarked as MarkAsRead } from 'lucide-react';
 
 interface NotificationPanelProps {
   onClose: () => void;
