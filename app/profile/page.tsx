@@ -36,6 +36,29 @@ interface ErrorState {
   [key: string]: string;
 }
 
+interface NotificationPreferences {
+  email: boolean;
+  push: boolean;
+  sms: boolean;
+  appointments: boolean;
+  marketing: boolean;
+  reports: boolean;
+}
+
+interface PrivacyPreferences {
+  profileVisible: boolean;
+  showEmail: boolean;
+  showPhone: boolean;
+}
+
+interface UserPreferences {
+  notifications: NotificationPreferences;
+  privacy: PrivacyPreferences;
+  language: string;
+  timezone: string;
+  theme: string;
+}
+
 export default function ProfilePage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('personal');
@@ -61,7 +84,7 @@ export default function ProfilePage() {
     confirmPassword: ''
   });
 
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useState<UserPreferences>({
     notifications: {
       email: true,
       push: true,
@@ -119,14 +142,31 @@ export default function ProfilePage() {
     }
   };
 
-  const handlePreferenceChange = (category: string, field: string, value: any) => {
-    setPreferences(prev => ({
-      ...prev,
-      [category]: {
-        ...prev[category as keyof typeof prev],
-        [field]: value
+  const handlePreferenceChange = (category: keyof UserPreferences, field: string, value: any) => {
+    setPreferences(prev => {
+      if (category === 'notifications') {
+        return {
+          ...prev,
+          notifications: {
+            ...prev.notifications,
+            [field]: value
+          }
+        };
+      } else if (category === 'privacy') {
+        return {
+          ...prev,
+          privacy: {
+            ...prev.privacy,
+            [field]: value
+          }
+        };
+      } else {
+        return {
+          ...prev,
+          [field]: value
+        };
       }
-    }));
+    });
   };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -632,7 +672,7 @@ export default function ProfilePage() {
               <label className="block text-sm font-medium mb-2">Idioma</label>
               <select
                 value={preferences.language}
-                onChange={(e) => handlePreferenceChange('', 'language', e.target.value)}
+                onChange={(e) => handlePreferenceChange('language' as keyof UserPreferences, 'language', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="es">Español</option>
@@ -645,7 +685,7 @@ export default function ProfilePage() {
               <label className="block text-sm font-medium mb-2">Zona Horaria</label>
               <select
                 value={preferences.timezone}
-                onChange={(e) => handlePreferenceChange('', 'timezone', e.target.value)}
+                onChange={(e) => handlePreferenceChange('timezone' as keyof UserPreferences, 'timezone', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="America/Mexico_City">Ciudad de México (GMT-6)</option>
