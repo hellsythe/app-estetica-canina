@@ -1,0 +1,33 @@
+{
+  "name": "estetica-canina-nextjs",
+
+  "dockerComposeFile": ["../docker-compose.yml", "docker-compose.yml"],
+
+  "service": "web",
+
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+
+  "postCreateCommand": "npm install && npm run dev",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "mhutchie.git-graph",
+        "pflannery.vscode-versionlens",
+        "firsttris.vscode-jest-runner",
+        "eamodio.gitlens",
+        "Supermaven.supermaven",
+        "alexkrechik.cucumberautocomplete"
+      ],
+      "settings": {
+        "editor.tabSize": 2,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "always"
+        }
+      }
+    }
+  },
+  "remoteUser": "node",
+  "mounts": ["type=bind,source=~/.ssh,target=/home/node/.ssh,readonly"]
+}

@@ -1,0 +1,17 @@
+services:
+
+  web:
+    image: node
+    command: /bin/sh -c "while sleep 1000; do :; done"
+    networks:
+      - servers
+    volumes:
+      - ./:/app
+    ports:
+      - 3000:3000
+    working_dir: /app
+
+networks:
+  servers:
+    # driver: bridge
+    external: true
