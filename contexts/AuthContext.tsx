@@ -29,6 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const token = localStorage.getItem('auth_token');
     if (token) {
       const decoded = verifyToken(token);
+
       if (decoded && decoded.user) {
         setUser(decoded.user);
       } else {
@@ -40,6 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = (token: string) => {
     const decoded = verifyToken(token);
+
     if (decoded && decoded.user) {
       localStorage.setItem('auth_token', token);
       setUser(decoded.user);

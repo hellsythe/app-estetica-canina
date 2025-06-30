@@ -7,14 +7,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { canAccessModule } from '@/lib/auth';
 import { useTheme } from '@/contexts/ThemeContext';
 import SyncStatusIndicator from '@/components/ui/SyncStatusIndicator';
-import { 
-  LayoutDashboard, 
-  Users, 
-  Calendar, 
-  Scissors, 
-  MessageSquare, 
-  ShoppingCart, 
-  Package, 
+import {
+  LayoutDashboard,
+  Users,
+  Calendar,
+  Scissors,
+  MessageSquare,
+  ShoppingCart,
+  Package,
   Calculator,
   Ticket,
   Share2,
@@ -87,7 +87,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   // Filter navigation items based on user permissions
-  const filteredNavigation = navigation.filter(item => 
+  const filteredNavigation = navigation.filter(item =>
     user ? canAccessModule(user.role, item.module) : false
   );
 
@@ -162,7 +162,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
           <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
             <div className="flex-shrink-0 flex items-center px-4">
-              <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">PetStyle Pro</h1>
+              <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">{process.env.NEXT_PUBLIC_APP_NAME}</h1>
             </div>
             <nav className="mt-5 px-2 space-y-1">
               {filteredNavigation.map((item) => {
@@ -194,7 +194,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex flex-col h-0 flex-1 bg-white dark:bg-gray-800 shadow-lg">
             <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
               <div className="flex items-center flex-shrink-0 px-4">
-                <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">PetStyle Pro</h1>
+                <h1 className="text-xl font-bold text-blue-600 dark:text-blue-400">{process.env.NEXT_PUBLIC_APP_NAME}</h1>
               </div>
               <nav className="mt-8 flex-1 px-2 space-y-1">
                 {filteredNavigation.map((item) => {
@@ -236,9 +236,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     </Badge>
                   </div>
                 </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleLogout}
                   className="text-xs text-gray-500 dark:text-gray-400 p-1 h-auto"
                   title="Cerrar sesión"
@@ -263,7 +263,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <Menu className="h-6 w-6" />
           </Button>
         </div>
-        
+
         {/* Top bar */}
         <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
@@ -288,9 +288,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <SyncStatusIndicator />
 
               {/* Theme Toggle */}
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={toggleTheme}
                 className="p-1"
                 title={theme === 'dark' ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
@@ -304,9 +304,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
               {/* Notifications */}
               <div className="relative">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="p-1 relative"
                   onClick={() => setNotificationsOpen(!notificationsOpen)}
                 >
@@ -315,17 +315,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     3
                   </span>
                 </Button>
-                
+
                 {notificationsOpen && (
                   <NotificationPanel onClose={() => setNotificationsOpen(false)} />
                 )}
               </div>
-              
+
               {/* User Profile Menu */}
               <div className="relative">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="flex items-center space-x-2 p-1"
                   onClick={() => setProfileMenuOpen(!profileMenuOpen)}
                 >
@@ -381,8 +381,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Search Results Panel */}
         {searchOpen && (
-          <SearchPanel 
-            searchTerm={searchTerm} 
+          <SearchPanel
+            searchTerm={searchTerm}
             onClose={() => setSearchOpen(false)}
             onNavigate={(path) => {
               router.push(path);

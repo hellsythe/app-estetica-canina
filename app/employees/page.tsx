@@ -7,85 +7,96 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  MoreHorizontal, 
-  Edit, 
+import {
+  Users,
+  Plus,
+  Search,
+  MoreHorizontal,
+  Edit,
   Trash2,
   Phone,
   Mail,
   Calendar,
   Clock
 } from 'lucide-react';
+import { useEmployees } from '@/hooks/useEmployees';
 
 export default function EmployeesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [employees, setEmployees] = useState([
-    {
-      id: 1,
-      name: 'Ana García',
-      position: 'Groomer Senior',
-      email: 'ana.garcia@petstyle.com',
-      phone: '+1 (555) 123-4567',
-      schedule: 'Lun-Vie 9:00-17:00',
-      status: 'Activo',
-      joinDate: '2023-01-15',
-      avatar: 'AG',
-      salary: 3500,
-      address: 'Calle Norte 456, Ciudad',
-      emergencyContact: 'Carlos García',
-      emergencyPhone: '+1 (555) 111-2222'
-    },
-    {
-      id: 2,
-      name: 'Carlos Mendez',
-      position: 'Groomer Junior',
-      email: 'carlos.mendez@petstyle.com',
-      phone: '+1 (555) 234-5678',
-      schedule: 'Mar-Sab 10:00-18:00',
-      status: 'Activo',
-      joinDate: '2023-03-20',
-      avatar: 'CM',
-      salary: 2800,
-      address: 'Avenida Sur 789, Ciudad',
-      emergencyContact: 'María Mendez',
-      emergencyPhone: '+1 (555) 222-3333'
-    },
-    {
-      id: 3,
-      name: 'Laura Rodríguez',
-      position: 'Recepcionista',
-      email: 'laura.rodriguez@petstyle.com',
-      phone: '+1 (555) 345-6789',
-      schedule: 'Lun-Vie 8:00-16:00',
-      status: 'Activo',
-      joinDate: '2022-11-10',
-      avatar: 'LR',
-      salary: 2200,
-      address: 'Boulevard Este 321, Ciudad',
-      emergencyContact: 'Pedro Rodríguez',
-      emergencyPhone: '+1 (555) 333-4444'
-    },
-    {
-      id: 4,
-      name: 'Miguel Torres',
-      position: 'Groomer Senior',
-      email: 'miguel.torres@petstyle.com',
-      phone: '+1 (555) 456-7890',
-      schedule: 'Mie-Dom 11:00-19:00',
-      status: 'Vacaciones',
-      joinDate: '2022-08-05',
-      avatar: 'MT',
-      salary: 3800,
-      address: 'Calle Oeste 654, Ciudad',
-      emergencyContact: 'Ana Torres',
-      emergencyPhone: '+1 (555) 444-5555'
-    }
-  ]);
+  // const [employees, setEmployees] = useState([
+  //   {
+  //     id: 1,
+  //     name: 'Ana García',
+  //     position: 'Groomer Senior',
+  //     email: 'ana.garcia@petstyle.com',
+  //     phone: '+1 (555) 123-4567',
+  //     schedule: 'Lun-Vie 9:00-17:00',
+  //     status: 'Activo',
+  //     joinDate: '2023-01-15',
+  //     avatar: 'AG',
+  //     salary: 3500,
+  //     address: 'Calle Norte 456, Ciudad',
+  //     emergencyContact: 'Carlos García',
+  //     emergencyPhone: '+1 (555) 111-2222'
+  //   },
+  //   {
+  //     id: 2,
+  //     name: 'Carlos Mendez',
+  //     position: 'Groomer Junior',
+  //     email: 'carlos.mendez@petstyle.com',
+  //     phone: '+1 (555) 234-5678',
+  //     schedule: 'Mar-Sab 10:00-18:00',
+  //     status: 'Activo',
+  //     joinDate: '2023-03-20',
+  //     avatar: 'CM',
+  //     salary: 2800,
+  //     address: 'Avenida Sur 789, Ciudad',
+  //     emergencyContact: 'María Mendez',
+  //     emergencyPhone: '+1 (555) 222-3333'
+  //   },
+  //   {
+  //     id: 3,
+  //     name: 'Laura Rodríguez',
+  //     position: 'Recepcionista',
+  //     email: 'laura.rodriguez@petstyle.com',
+  //     phone: '+1 (555) 345-6789',
+  //     schedule: 'Lun-Vie 8:00-16:00',
+  //     status: 'Activo',
+  //     joinDate: '2022-11-10',
+  //     avatar: 'LR',
+  //     salary: 2200,
+  //     address: 'Boulevard Este 321, Ciudad',
+  //     emergencyContact: 'Pedro Rodríguez',
+  //     emergencyPhone: '+1 (555) 333-4444'
+  //   },
+  //   {
+  //     id: 4,
+  //     name: 'Miguel Torres',
+  //     position: 'Groomer Senior',
+  //     email: 'miguel.torres@petstyle.com',
+  //     phone: '+1 (555) 456-7890',
+  //     schedule: 'Mie-Dom 11:00-19:00',
+  //     status: 'Vacaciones',
+  //     joinDate: '2022-08-05',
+  //     avatar: 'MT',
+  //     salary: 3800,
+  //     address: 'Calle Oeste 654, Ciudad',
+  //     emergencyContact: 'Ana Torres',
+  //     emergencyPhone: '+1 (555) 444-5555'
+  //   }
+  // ]);
+    const {
+    employees,
+    isLoading,
+    error,
+    createEmployee,
+    updateEmployee,
+    deleteEmployee
+  } = useEmployees();
+
+  console.log(employees);
 
   const filteredEmployees = employees.filter(employee =>
     employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -105,7 +116,7 @@ export default function EmployeesPage() {
   const handleSaveEmployee = (employeeData: any) => {
     if (selectedEmployee) {
       // Update existing employee
-      setEmployees(prev => prev.map(emp => 
+      setEmployees(prev => prev.map(emp =>
         emp.id === employeeData.id ? employeeData : emp
       ));
     } else {
@@ -243,9 +254,9 @@ export default function EmployeesPage() {
                       <Button variant="ghost" size="sm" onClick={() => handleEditEmployee(employee)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleDeleteEmployee(employee.id)}
                         className="text-red-500 hover:text-red-700"
                       >
