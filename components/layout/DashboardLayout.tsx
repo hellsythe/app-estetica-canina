@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { canAccessModule } from '@/lib/auth';
 import { useTheme } from '@/contexts/ThemeContext';
+import SyncStatusIndicator from '@/components/ui/SyncStatusIndicator';
 import { 
   LayoutDashboard, 
   Users, 
@@ -283,6 +284,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </div>
             </div>
             <div className="ml-4 flex items-center md:ml-6 space-x-4">
+              {/* Sync Status Indicator */}
+              <SyncStatusIndicator />
+
               {/* Theme Toggle */}
               <Button 
                 variant="ghost" 

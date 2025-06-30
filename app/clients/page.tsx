@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ClientForm from '@/components/forms/ClientForm';
+import SyncStatusIndicator from '@/components/ui/SyncStatusIndicator';
+import { useClients } from '@/hooks/useOfflineSync';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,82 +20,22 @@ import {
   MapPin,
   Heart,
   Calendar,
-  Trash2
+  Trash2,
+  WifiOff,
+  CheckCircle
 } from 'lucide-react';
 
 export default function ClientsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
-  const [clients, setClients] = useState([
-    {
-      id: 1,
-      name: 'María González',
-      email: 'maria.gonzalez@email.com',
-      phone: '+1 (555) 123-4567',
-      address: 'Calle Principal 123, Ciudad',
-      pets: [
-        { name: 'Max', breed: 'Golden Retriever', age: '3 años' },
-        { name: 'Bella', breed: 'Labrador', age: '2 años' }
-      ],
-      lastVisit: '2024-01-15',
-      totalVisits: 12,
-      status: 'Activo',
-      emergencyContact: 'Carlos González',
-      emergencyPhone: '+1 (555) 111-2222'
-    },
-    {
-      id: 2,
-      name: 'Carlos Ruiz',
-      email: 'carlos.ruiz@email.com',
-      phone: '+1 (555) 234-5678',
-      address: 'Avenida Central 456, Ciudad',
-      pets: [
-        { name: 'Luna', breed: 'Poodle', age: '4 años' }
-      ],
-      lastVisit: '2024-01-10',
-      totalVisits: 8,
-      status: 'Activo',
-      emergencyContact: 'Ana Ruiz',
-      emergencyPhone: '+1 (555) 222-3333'
-    },
-    {
-      id: 3,
-      name: 'Ana Martínez',
-      email: 'ana.martinez@email.com',
-      phone: '+1 (555) 345-6789',
-      address: 'Boulevard Norte 789, Ciudad',
-      pets: [
-        { name: 'Rocky', breed: 'Pastor Alemán', age: '5 años' },
-        { name: 'Coco', breed: 'Chihuahua', age: '1 año' }
-      ],
-      lastVisit: '2024-01-08',
-      totalVisits: 15,
-      status: 'VIP',
-      emergencyContact: 'Luis Martínez',
-      emergencyPhone: '+1 (555) 333-4444'
-    },
-    {
-      id: 4,
-      name: 'Luis Fernández',
-      email: 'luis.fernandez@email.com',
-      phone: '+1 (555) 456-7890',
-      address: 'Calle Sur 321, Ciudad',
-      pets: [
-        { name: 'Toby', breed: 'Beagle', age: '2 años' }
-      ],
-      lastVisit: '2023-12-20',
-      totalVisits: 5,
-      status: 'Inactivo',
-      emergencyContact: 'Carmen Fernández',
-      emergencyPhone: '+1 (555) 444-5555'
-    }
-  ]);
+  
+  const { clients, addClient, updateClient, deleteClient, syncStatus } = useClients();
 
   const filteredClients = clients.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.pets.some(pet => pet.name.toLowerCase().includes(searchTerm.toLowerCase()))
+    client.pets?.some((pet: any) => pet.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleAddClient = () => {
@@ -108,19 +50,15 @@ export default function ClientsPage() {
 
   const handleSaveClient = (clientData: any) => {
     if (selectedClient) {
-      // Update existing client
-      setClients(prev => prev.map(client => 
-        client.id === clientData.id ? clientData : client
-      ));
+      updateClient(selectedClient.id, clientData);
     } else {
-      // Add new client
-      setClients(prev => [...prev, clientData]);
+      addClient(clientData);
     }
   };
 
   const handleDeleteClient = (id: number) => {
     if (confirm('¿Estás seguro de que quieres eliminar este cliente?')) {
-      setClients(prev => prev.filter(client => client.id !== id));
+      deleteClient(id);
     }
   };
 
@@ -131,12 +69,23 @@ export default function ClientsPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Clientes</h1>
-            <p className="text-gray-600">Gestiona tu base de clientes y sus mascotas</p>
+            <div className="flex items-center gap-4">
+              <p className="text-gray-600">Gestiona tu base de clientes y sus mascotas</p>
+              {!syncStatus.isOnline && (
+                <div className="flex items-center gap-2 text-amber-600">
+                  <WifiOff className="h-4 w-4" />
+                  <span className="text-sm">Modo offline</span>
+                </div>
+              )}
+            </div>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleAddClient}>
-            <Plus className="h-4 w-4 mr-2" />
-            Agregar Cliente
-          </Button>
+          <div className="flex items-center gap-3">
+            <SyncStatusIndicator showDetails={false} />
+            <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleAddClient}>
+              <Plus className="h-4 w-4 mr-2" />
+              Agregar Cliente
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -167,7 +116,19 @@ export default function ClientsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{clients.length}</div>
-              <p className="text-xs text-gray-500">+8 este mes</p>
+              <p className="text-xs text-gray-500">
+                {syncStatus.isOnline ? (
+                  <span className="flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3 text-green-500" />
+                    Sincronizado
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1">
+                    <WifiOff className="h-3 w-3 text-amber-500" />
+                    Offline
+                  </span>
+                )}
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -196,11 +157,33 @@ export default function ClientsPage() {
               <Heart className="h-4 w-4 text-purple-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{clients.reduce((sum, c) => sum + c.pets.length, 0)}</div>
+              <div className="text-2xl font-bold">{clients.reduce((sum, c) => sum + (c.pets?.length || 0), 0)}</div>
               <p className="text-xs text-gray-500">1.45 promedio por cliente</p>
             </CardContent>
           </Card>
         </div>
+
+        {/* Sync Status Details */}
+        {syncStatus.pendingSync > 0 && (
+          <Card className="border-amber-200 bg-amber-50">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <WifiOff className="h-5 w-5 text-amber-600" />
+                  <div>
+                    <p className="font-medium text-amber-800">
+                      {syncStatus.pendingSync} cambios pendientes de sincronización
+                    </p>
+                    <p className="text-sm text-amber-600">
+                      Los cambios se guardarán localmente y se sincronizarán cuando vuelva la conexión
+                    </p>
+                  </div>
+                </div>
+                <SyncStatusIndicator showDetails={true} className="w-64" />
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Clients List */}
         <Card>
@@ -221,6 +204,12 @@ export default function ClientsPage() {
                         }>
                           {client.status}
                         </Badge>
+                        {!syncStatus.isOnline && (
+                          <Badge variant="outline" className="text-amber-600 border-amber-300">
+                            <WifiOff className="h-3 w-3 mr-1" />
+                            Local
+                          </Badge>
+                        )}
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -253,12 +242,14 @@ export default function ClientsPage() {
                       <div className="mt-3">
                         <p className="text-sm font-medium text-gray-700 mb-2">Mascotas:</p>
                         <div className="flex flex-wrap gap-2">
-                          {client.pets.map((pet, index) => (
+                          {client.pets?.map((pet: any, index: number) => (
                             <div key={index} className="bg-blue-50 px-3 py-1 rounded-full text-sm">
                               <span className="font-medium">{pet.name}</span>
                               <span className="text-gray-600"> - {pet.breed}, {pet.age}</span>
                             </div>
-                          ))}
+                          )) || (
+                            <span className="text-gray-500 text-sm">Sin mascotas registradas</span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -282,6 +273,12 @@ export default function ClientsPage() {
                   </div>
                 </div>
               ))}
+              
+              {filteredClients.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  {searchTerm ? 'No se encontraron clientes que coincidan con la búsqueda' : 'No hay clientes registrados'}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
