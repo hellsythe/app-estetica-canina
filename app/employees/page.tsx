@@ -20,73 +20,12 @@ import {
   Clock
 } from 'lucide-react';
 import { useEmployees } from '@/hooks/useEmployees';
+import { Employee } from '@/lib/api/services/employee/employee';
 
 export default function EmployeesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
-  // const [employees, setEmployees] = useState([
-  //   {
-  //     id: 1,
-  //     name: 'Ana García',
-  //     position: 'Groomer Senior',
-  //     email: 'ana.garcia@petstyle.com',
-  //     phone: '+1 (555) 123-4567',
-  //     schedule: 'Lun-Vie 9:00-17:00',
-  //     status: 'Activo',
-  //     joinDate: '2023-01-15',
-  //     avatar: 'AG',
-  //     salary: 3500,
-  //     address: 'Calle Norte 456, Ciudad',
-  //     emergencyContact: 'Carlos García',
-  //     emergencyPhone: '+1 (555) 111-2222'
-  //   },
-  //   {
-  //     id: 2,
-  //     name: 'Carlos Mendez',
-  //     position: 'Groomer Junior',
-  //     email: 'carlos.mendez@petstyle.com',
-  //     phone: '+1 (555) 234-5678',
-  //     schedule: 'Mar-Sab 10:00-18:00',
-  //     status: 'Activo',
-  //     joinDate: '2023-03-20',
-  //     avatar: 'CM',
-  //     salary: 2800,
-  //     address: 'Avenida Sur 789, Ciudad',
-  //     emergencyContact: 'María Mendez',
-  //     emergencyPhone: '+1 (555) 222-3333'
-  //   },
-  //   {
-  //     id: 3,
-  //     name: 'Laura Rodríguez',
-  //     position: 'Recepcionista',
-  //     email: 'laura.rodriguez@petstyle.com',
-  //     phone: '+1 (555) 345-6789',
-  //     schedule: 'Lun-Vie 8:00-16:00',
-  //     status: 'Activo',
-  //     joinDate: '2022-11-10',
-  //     avatar: 'LR',
-  //     salary: 2200,
-  //     address: 'Boulevard Este 321, Ciudad',
-  //     emergencyContact: 'Pedro Rodríguez',
-  //     emergencyPhone: '+1 (555) 333-4444'
-  //   },
-  //   {
-  //     id: 4,
-  //     name: 'Miguel Torres',
-  //     position: 'Groomer Senior',
-  //     email: 'miguel.torres@petstyle.com',
-  //     phone: '+1 (555) 456-7890',
-  //     schedule: 'Mie-Dom 11:00-19:00',
-  //     status: 'Vacaciones',
-  //     joinDate: '2022-08-05',
-  //     avatar: 'MT',
-  //     salary: 3800,
-  //     address: 'Calle Oeste 654, Ciudad',
-  //     emergencyContact: 'Ana Torres',
-  //     emergencyPhone: '+1 (555) 444-5555'
-  //   }
-  // ]);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee>(new Employee());
     const {
     employees,
     isLoading,
@@ -96,38 +35,34 @@ export default function EmployeesPage() {
     deleteEmployee
   } = useEmployees();
 
-  console.log(employees);
 
-  const filteredEmployees = employees.filter(employee =>
+  const filteredEmployees = employees.filter((employee: Employee) =>
     employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    employee.position.toLowerCase().includes(searchTerm.toLowerCase())
+    employee.lastname.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleAddEmployee = () => {
-    setSelectedEmployee(null);
+    setSelectedEmployee(new Employee());
     setIsFormOpen(true);
   };
 
-  const handleEditEmployee = (employee: any) => {
+  const handleEditEmployee = (employee: Employee) => {
     setSelectedEmployee(employee);
+    console.log(employee);
     setIsFormOpen(true);
   };
 
   const handleSaveEmployee = (employeeData: any) => {
-    if (selectedEmployee) {
-      // Update existing employee
-      setEmployees(prev => prev.map(emp =>
-        emp.id === employeeData.id ? employeeData : emp
-      ));
+    if (selectedEmployee.id) {
+      updateEmployee(employeeData.id, employeeData);
     } else {
-      // Add new employee
-      setEmployees(prev => [...prev, employeeData]);
+      createEmployee(employeeData);
     }
   };
 
-  const handleDeleteEmployee = (id: number) => {
+  const handleDeleteEmployee = (id: string) => {
     if (confirm('¿Estás seguro de que quieres eliminar este empleado?')) {
-      setEmployees(prev => prev.filter(emp => emp.id !== id));
+      deleteEmployee(id);
     }
   };
 
@@ -186,26 +121,6 @@ export default function EmployeesPage() {
               <p className="text-xs text-gray-500">75% del equipo</p>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Groomers</CardTitle>
-              <Users className="h-4 w-4 text-blue-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{employees.filter(e => e.position.includes('Groomer')).length}</div>
-              <p className="text-xs text-gray-500">Especialistas</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Personal Administrativo</CardTitle>
-              <Users className="h-4 w-4 text-purple-400" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{employees.filter(e => !e.position.includes('Groomer')).length}</div>
-              <p className="text-xs text-gray-500">Recepción</p>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Employees List */}
@@ -219,32 +134,25 @@ export default function EmployeesPage() {
                 <div key={employee.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                   <div className="flex items-center space-x-4">
                     <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
-                      {employee.avatar}
+                      {/* {employee.avatar} */}
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900">{employee.name}</h3>
-                      <p className="text-sm text-gray-600">{employee.position}</p>
+                      <p className="text-sm text-gray-600">Empleado</p>
                       <div className="flex items-center space-x-4 mt-1">
-                        <div className="flex items-center text-xs text-gray-500">
-                          <Mail className="h-3 w-3 mr-1" />
-                          {employee.email}
-                        </div>
+
                         <div className="flex items-center text-xs text-gray-500">
                           <Phone className="h-3 w-3 mr-1" />
-                          {employee.phone}
+                          {employee.phoneNumber}
                         </div>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center space-x-4">
                     <div className="text-right">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Clock className="h-4 w-4 mr-1" />
-                        {employee.schedule}
-                      </div>
                       <div className="flex items-center text-sm text-gray-500 mt-1">
                         <Calendar className="h-4 w-4 mr-1" />
-                        Desde {employee.joinDate}
+                        Desde {employee.startDate}
                       </div>
                     </div>
                     <Badge variant={employee.status === 'Activo' ? 'default' : 'secondary'}>
