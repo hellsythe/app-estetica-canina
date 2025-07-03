@@ -1,13 +1,45 @@
+interface GroupedErrors {
+  [key: string]: string[];
+}
+
+const groupErrors = (apiError: ApiErrorResponse | null): GroupedErrors => {
+  if (!apiError?.message) return {};
+
+  return apiError.message.reduce((grouped, errorMsg) => {
+    // Encuentra el nombre del campo (todo lo que está antes de "should" o "must")
+    const fieldName = errorMsg.split(/\s+/)[0];
+
+    // Si el campo ya existe, añade el mensaje, si no, crea un nuevo array
+    if (!grouped[fieldName]) {
+      grouped[fieldName] = [];
+    }
+    grouped[fieldName].push(errorMsg);
+
+    return grouped;
+  }, {} as GroupedErrors);
+};
+
 interface RequestOptions {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   data?: any;
   queryParams?: Record<string, string>;
 }
 
-interface ApiError {
+interface ApiErrorResponse {
   message: string[];
   error: string;
   statusCode: number;
+}
+
+class ApiError extends Error {
+  statusCode: number;
+  errors: GroupedErrors;
+
+  constructor(message: string, errors: GroupedErrors, statusCode: number) {
+    super(message);
+    this.statusCode = statusCode;
+    this.errors = errors;
+  }
 }
 
 export class BackendClient {
@@ -38,13 +70,13 @@ export class BackendClient {
       });
 
       if (!response.ok) {
-        const errorData: ApiError = await response.json();
-        throw new Error(errorData.message?.[0] || 'Request failed');
+        const errorData: ApiErrorResponse = await response.json();
+        throw new ApiError('Request failed', groupErrors(errorData), errorData.statusCode);
       }
 
       return response.json();
     } catch (error) {
-      throw error instanceof Error
+      throw error instanceof ApiError
         ? error
         : new Error('An unexpected error occurred');
     }

@@ -15,7 +15,7 @@ import { Employee } from '@/lib/api/services/employee/employee';
 interface EmployeeFormProps {
   isOpen: boolean;
   onClose: () => void;
-  employee?: any;
+  employee: Employee;
   onSave: (employee: any) => void;
 }
 
@@ -45,8 +45,23 @@ export default function EmployeeForm({ isOpen, onClose, employee, onSave }: Empl
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
-    onClose();
+    try {
+      onSave(formData);
+      onClose();
+    } catch (error) {
+      console.error('anime');
+      console.error('anime');
+      console.error('anime');
+      console.error('anime');
+      console.error('anime');
+      console.error(error);
+      // setErrors(prev => ({
+      //   ...prev,
+      //   [field]: 'Error al guardar'
+      // }));
+    }
+    // onSave(formData);
+    // onClose();
   };
 
   if (!isOpen) return null;
@@ -58,7 +73,7 @@ export default function EmployeeForm({ isOpen, onClose, employee, onSave }: Empl
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              {employee ? 'Editar Empleado' : 'Agregar Empleado'}
+              {employee.id ? 'Editar Empleado' : 'Agregar Empleado'}
             </CardTitle>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="h-4 w-4" />

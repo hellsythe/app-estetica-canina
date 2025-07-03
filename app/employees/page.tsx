@@ -48,7 +48,6 @@ export default function EmployeesPage() {
 
   const handleEditEmployee = (employee: Employee) => {
     setSelectedEmployee(employee);
-    console.log(employee);
     setIsFormOpen(true);
   };
 
