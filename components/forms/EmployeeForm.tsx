@@ -4,13 +4,13 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import {
   X,
   Save,
   User,
 } from 'lucide-react';
 import { Employee } from '@/lib/api/services/employee/employee';
+import { Toaster, toast } from 'react-hot-toast';
 
 interface EmployeeFormProps {
   isOpen: boolean;
@@ -23,6 +23,7 @@ export default function EmployeeForm({ isOpen, onClose, employee, onSave }: Empl
   const [formData, setFormData] = useState<Employee>(employee);
   useEffect(() => {
     setFormData(employee);
+    setErrors({});
   }, [employee]);
 
   const [errors, setErrors] = useState<any>({});
@@ -43,25 +44,16 @@ export default function EmployeeForm({ isOpen, onClose, employee, onSave }: Empl
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      onSave(formData);
+      await onSave(formData);
       onClose();
-    } catch (error) {
-      console.error('anime');
-      console.error('anime');
-      console.error('anime');
-      console.error('anime');
-      console.error('anime');
-      console.error(error);
-      // setErrors(prev => ({
-      //   ...prev,
-      //   [field]: 'Error al guardar'
-      // }));
+    } catch (error: any) {
+      if (error?.errors) {
+        setErrors(error.errors);
+      }
     }
-    // onSave(formData);
-    // onClose();
   };
 
   if (!isOpen) return null;
@@ -114,7 +106,7 @@ export default function EmployeeForm({ isOpen, onClose, employee, onSave }: Empl
                   <Input
                     value={formData.phoneNumber}
                     onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
-                    placeholder="+1 (555) 123-4567"
+                    placeholder="274 109 2556"
                     className={errors.phoneNumber ? 'border-red-500' : ''}
                   />
                   {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>}
@@ -140,7 +132,7 @@ export default function EmployeeForm({ isOpen, onClose, employee, onSave }: Empl
                   <label className="block text-sm font-medium mb-2">Salario Mensual *</label>
                   <Input
                     type="number"
-                    value={formData.salary}
+                    value={formData.salary || ''}
                     onChange={(e) => handleInputChange('salary', e.target.value)}
                     placeholder="2500"
                     className={errors.salary ? 'border-red-500' : ''}
@@ -153,8 +145,10 @@ export default function EmployeeForm({ isOpen, onClose, employee, onSave }: Empl
                   <Input
                     type="date"
                     value={formData.startDate}
+                    className={errors.startDate ? 'border-red-500' : ''}
                     onChange={(e) => handleInputChange('startDate', e.target.value)}
                   />
+                  {errors.startDate && <p className="text-red-500 text-xs mt-1">{errors.startDate}</p>}
                 </div>
 
                 <div>
@@ -192,7 +186,7 @@ export default function EmployeeForm({ isOpen, onClose, employee, onSave }: Empl
                   <Input
                     value={formData.emergencyPhone}
                     onChange={(e) => handleInputChange('emergencyPhone', e.target.value)}
-                    placeholder="+1 (555) 987-6543"
+                    placeholder="274 109 2556"
                   />
                 </div>
               </div>

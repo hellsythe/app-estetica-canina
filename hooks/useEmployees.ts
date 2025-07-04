@@ -13,9 +13,11 @@ export const useEmployees = () => {
       const data = await employeeService.getAll();
       setEmployees(data.data);
     } catch (err: any) {
-      setError(err.message);
+      setError(err);
+      throw err;
     } finally {
       setIsLoading(false);
+
     }
   };
 
@@ -25,7 +27,7 @@ export const useEmployees = () => {
       setEmployees(prev => [...prev, newEmployee]);
       return newEmployee;
     } catch (err: any) {
-      setError(err.message);
+      setError(err);
       throw err;
     }
   };
@@ -38,7 +40,7 @@ export const useEmployees = () => {
       );
       return updatedEmployee;
     } catch (err: any) {
-      setError(err.message);
+      setError(err);
       throw err;
     }
   };
@@ -48,7 +50,7 @@ export const useEmployees = () => {
       await employeeService.delete(id);
       setEmployees(prev => prev.filter(emp => emp.id !== id));
     } catch (err: any) {
-      setError(err.message);
+      setError(err);
       throw err;
     }
   };

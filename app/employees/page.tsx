@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useEmployees } from '@/hooks/useEmployees';
 import { Employee } from '@/lib/api/services/employee/employee';
+import toast from 'react-hot-toast';
 
 export default function EmployeesPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -51,18 +52,63 @@ export default function EmployeesPage() {
     setIsFormOpen(true);
   };
 
-  const handleSaveEmployee = (employeeData: any) => {
+  const handleSaveEmployee = async (employeeData: any) => {
     if (selectedEmployee.id) {
-      updateEmployee(employeeData.id, employeeData);
+      await updateEmployee(employeeData.id, employeeData);
+      toast.success('Empleado actualizado correctamente');
     } else {
-      createEmployee(employeeData);
+      await createEmployee(employeeData);
+      toast.success('Empleado guardado correctamente');
     }
   };
 
+  // const handleDeleteEmployee = (id: string) => {
+  //   if (confirm('¿Estás seguro de que quieres eliminar este empleado?')) {
+  //     deleteEmployee(id);
+  //   }
+  // };
+
   const handleDeleteEmployee = (id: string) => {
-    if (confirm('¿Estás seguro de que quieres eliminar este empleado?')) {
-      deleteEmployee(id);
-    }
+    toast((t) => (
+      <div className="flex flex-col gap-4 p-2">
+        <p className="font-semibold">¿Estás seguro de que quieres eliminar este empleado?</p>
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => toast.dismiss(t.id)}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => {
+              deleteEmployee(id);
+              toast.dismiss(t.id);
+              toast.success('Empleado eliminado correctamente');
+            }}
+          >
+            Eliminar
+          </Button>
+        </div>
+      </div>
+    ), {
+      duration: 5000,
+      position: 'top-center',
+      style: {
+        background: '#fff',
+        padding: '1rem',
+        borderRadius: '0.5rem',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      },
+    });
+  };
+
+  const calculateActivePercentage = () => {
+    if (employees.length === 0) return 0;
+    const activeEmployees = employees.filter(e => e.status === 'Activo').length;
+    return Math.round((activeEmployees / employees.length) * 100);
   };
 
   return (
@@ -91,11 +137,6 @@ export default function EmployeesPage() {
               className="pl-10"
             />
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline">Todos</Button>
-            <Button variant="outline">Activos</Button>
-            <Button variant="outline">Inactivos</Button>
-          </div>
         </div>
 
         {/* Stats Cards */}
@@ -117,7 +158,7 @@ export default function EmployeesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{employees.filter(e => e.status === 'Activo').length}</div>
-              <p className="text-xs text-gray-500">75% del equipo</p>
+              <p className="text-xs text-gray-500">{calculateActivePercentage()}% del equipo</p>
             </CardContent>
           </Card>
         </div>
