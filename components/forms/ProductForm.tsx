@@ -1,17 +1,18 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
+import {
   X,
   Save,
   Package,
   DollarSign,
   AlertTriangle
 } from 'lucide-react';
+import { Product } from '@/lib/api/services/product/product';
 
 interface ProductFormProps {
   isOpen: boolean;
@@ -21,17 +22,12 @@ interface ProductFormProps {
 }
 
 export default function ProductForm({ isOpen, onClose, product, onSave }: ProductFormProps) {
-  const [formData, setFormData] = useState({
-    name: product?.name || '',
-    category: product?.category || 'Higiene',
-    price: product?.price || '',
-    stock: product?.stock || '',
-    minStock: product?.minStock || '',
-    supplier: product?.supplier || '',
-    description: product?.description || '',
-    sku: product?.sku || '',
-    status: product?.status || 'Disponible'
-  });
+  const [formData, setFormData] = useState<Product>(product);
+
+  useEffect(() => {
+    setFormData(product);
+    setErrors({});
+  }, [product]);
 
   const [errors, setErrors] = useState<any>({});
 
@@ -60,7 +56,7 @@ export default function ProductForm({ isOpen, onClose, product, onSave }: Produc
       ...prev,
       [field]: value
     }));
-    
+
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
@@ -76,42 +72,13 @@ export default function ProductForm({ isOpen, onClose, product, onSave }: Produc
     setFormData(prev => ({ ...prev, sku }));
   };
 
-  const validateForm = () => {
-    const newErrors: any = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'El nombre del producto es requerido';
-    }
-
-    if (!formData.price.trim()) {
-      newErrors.price = 'El precio es requerido';
-    } else if (isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
-      newErrors.price = 'El precio debe ser un número válido mayor a 0';
-    }
-
-    if (!formData.stock.trim()) {
-      newErrors.stock = 'El stock es requerido';
-    } else if (isNaN(Number(formData.stock)) || Number(formData.stock) < 0) {
-      newErrors.stock = 'El stock debe ser un número válido mayor o igual a 0';
-    }
-
-    if (!formData.minStock.trim()) {
-      newErrors.minStock = 'El stock mínimo es requerido';
-    } else if (isNaN(Number(formData.minStock)) || Number(formData.minStock) < 0) {
-      newErrors.minStock = 'El stock mínimo debe ser un número válido mayor o igual a 0';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (validateForm()) {
-      const stock = Number(formData.stock);
-      const minStock = Number(formData.minStock);
-      
+
+    try {
+      const stock = formData.stock;
+      const minStock = formData.minStock;
+
       let status = 'Disponible';
       if (stock === 0) {
         status = 'Agotado';
@@ -128,9 +95,13 @@ export default function ProductForm({ isOpen, onClose, product, onSave }: Produc
         status: status,
         sku: formData.sku || `PRD-${Date.now()}`
       };
-      
-      onSave(productData);
+
+      await onSave(productData);
       onClose();
+    } catch (error: any) {
+      if (error?.errors) {
+        setErrors(error.errors);
+      }
     }
   };
 
@@ -155,7 +126,7 @@ export default function ProductForm({ isOpen, onClose, product, onSave }: Produc
             {/* Basic Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">Información Básica</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Nombre del Producto *</label>
@@ -196,20 +167,6 @@ export default function ProductForm({ isOpen, onClose, product, onSave }: Produc
                   </div>
                   {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">Proveedor</label>
-                  <select
-                    value={formData.supplier}
-                    onChange={(e) => handleInputChange('supplier', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Seleccionar proveedor</option>
-                    {suppliers.map(supplier => (
-                      <option key={supplier} value={supplier}>{supplier}</option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
               <div>
@@ -227,7 +184,7 @@ export default function ProductForm({ isOpen, onClose, product, onSave }: Produc
             {/* Inventory Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">Inventario</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Stock Actual *</label>
@@ -270,11 +227,11 @@ export default function ProductForm({ isOpen, onClose, product, onSave }: Produc
               </div>
 
               {/* Stock Warning */}
-              {formData.stock && formData.minStock && Number(formData.stock) <= Number(formData.minStock) && (
+              {formData.stock && formData.minStock && formData.stock <= formData.minStock && (
                 <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <AlertTriangle className="h-4 w-4 text-yellow-600" />
                   <span className="text-sm text-yellow-800">
-                    {Number(formData.stock) === 0 
+                    {formData.stock === 0
                       ? 'Producto agotado - Se marcará como no disponible'
                       : 'Stock bajo - Se marcará para reposición'
                     }
@@ -290,7 +247,7 @@ export default function ProductForm({ isOpen, onClose, product, onSave }: Produc
               </Button>
               <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
                 <Save className="h-4 w-4 mr-2" />
-                {product ? 'Actualizar' : 'Guardar'} Producto
+                {product.id ? 'Actualizar' : 'Guardar'} Producto
               </Button>
             </div>
           </form>

@@ -7,11 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Package, 
-  Plus, 
-  Search, 
-  MoreHorizontal, 
+import {
+  Package,
+  Plus,
+  Search,
+  MoreHorizontal,
   Edit,
   AlertTriangle,
   DollarSign,
@@ -19,73 +19,77 @@ import {
   ShoppingCart,
   Trash2
 } from 'lucide-react';
+import { Product } from '@/lib/api/services/product/product';
+import { useProducts } from '@/hooks/useProduct';
+import toast from 'react-hot-toast';
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: 'Champú Antipulgas Premium',
-      category: 'Higiene',
-      price: 25.99,
-      stock: 15,
-      minStock: 5,
-      supplier: 'PetCare Solutions',
-      status: 'Disponible',
-      sku: 'HIG-0001',
-      description: 'Champú especializado para eliminar pulgas y garrapatas'
-    },
-    {
-      id: 2,
-      name: 'Acondicionador Hidratante',
-      category: 'Higiene',
-      price: 18.50,
-      stock: 8,
-      minStock: 10,
-      supplier: 'PetCare Solutions',
-      status: 'Stock Bajo',
-      sku: 'HIG-0002',
-      description: 'Acondicionador para pelo seco y maltratado'
-    },
-    {
-      id: 3,
-      name: 'Cortauñas Profesional',
-      category: 'Herramientas',
-      price: 45.00,
-      stock: 3,
-      minStock: 2,
-      supplier: 'GroomTech',
-      status: 'Disponible',
-      sku: 'HER-0001',
-      description: 'Cortauñas de acero inoxidable para uso profesional'
-    },
-    {
-      id: 4,
-      name: 'Cepillo Desenredante',
-      category: 'Herramientas',
-      price: 22.75,
-      stock: 12,
-      minStock: 5,
-      supplier: 'GroomTech',
-      status: 'Disponible',
-      sku: 'HER-0002',
-      description: 'Cepillo especial para desenredar pelo largo'
-    },
-    {
-      id: 5,
-      name: 'Perfume Canino Lavanda',
-      category: 'Fragancias',
-      price: 15.99,
-      stock: 0,
-      minStock: 8,
-      supplier: 'Aroma Pets',
-      status: 'Agotado',
-      sku: 'FRA-0001',
-      description: 'Perfume con aroma a lavanda, larga duración'
-    }
-  ]);
+  const [selectedProduct, setSelectedProduct] = useState(new Product());
+  // const [products, setProducts] = useState([
+  //   {
+  //     id: 1,
+  //     name: 'Champú Antipulgas Premium',
+  //     category: 'Higiene',
+  //     price: 25.99,
+  //     stock: 15,
+  //     minStock: 5,
+  //     supplier: 'PetCare Solutions',
+  //     status: 'Disponible',
+  //     sku: 'HIG-0001',
+  //     description: 'Champú especializado para eliminar pulgas y garrapatas'
+  //   },
+  //   {
+  //     id: 2,
+  //     name: 'Acondicionador Hidratante',
+  //     category: 'Higiene',
+  //     price: 18.50,
+  //     stock: 8,
+  //     minStock: 10,
+  //     supplier: 'PetCare Solutions',
+  //     status: 'Stock Bajo',
+  //     sku: 'HIG-0002',
+  //     description: 'Acondicionador para pelo seco y maltratado'
+  //   },
+  //   {
+  //     id: 3,
+  //     name: 'Cortauñas Profesional',
+  //     category: 'Herramientas',
+  //     price: 45.00,
+  //     stock: 3,
+  //     minStock: 2,
+  //     supplier: 'GroomTech',
+  //     status: 'Disponible',
+  //     sku: 'HER-0001',
+  //     description: 'Cortauñas de acero inoxidable para uso profesional'
+  //   },
+  //   {
+  //     id: 4,
+  //     name: 'Cepillo Desenredante',
+  //     category: 'Herramientas',
+  //     price: 22.75,
+  //     stock: 12,
+  //     minStock: 5,
+  //     supplier: 'GroomTech',
+  //     status: 'Disponible',
+  //     sku: 'HER-0002',
+  //     description: 'Cepillo especial para desenredar pelo largo'
+  //   },
+  //   {
+  //     id: 5,
+  //     name: 'Perfume Canino Lavanda',
+  //     category: 'Fragancias',
+  //     price: 15.99,
+  //     stock: 0,
+  //     minStock: 8,
+  //     supplier: 'Aroma Pets',
+  //     status: 'Agotado',
+  //     sku: 'FRA-0001',
+  //     description: 'Perfume con aroma a lavanda, larga duración'
+  //   }
+  // ]);
+  const { products, createProduct, updateProduct, deleteProduct } = useProducts();
 
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -94,7 +98,7 @@ export default function ProductsPage() {
   );
 
   const handleAddProduct = () => {
-    setSelectedProduct(null);
+    setSelectedProduct(new Product());
     setIsFormOpen(true);
   };
 
@@ -103,22 +107,51 @@ export default function ProductsPage() {
     setIsFormOpen(true);
   };
 
-  const handleSaveProduct = (productData: any) => {
-    if (selectedProduct) {
-      // Update existing product
-      setProducts(prev => prev.map(product => 
-        product.id === productData.id ? productData : product
-      ));
+  const handleSaveProduct = async (productData: any) => {
+    if (selectedProduct.id) {
+      await updateProduct(selectedProduct.id, productData);
+      toast.success('Producto actualizado correctamente');
     } else {
-      // Add new product
-      setProducts(prev => [...prev, productData]);
+      await createProduct(productData);
+      toast.success('Producto guardado correctamente');
     }
   };
 
-  const handleDeleteProduct = (id: number) => {
-    if (confirm('¿Estás seguro de que quieres eliminar este producto?')) {
-      setProducts(prev => prev.filter(product => product.id !== id));
-    }
+  const handleDeleteProduct = (id: string) => {
+    toast((t) => (
+      <div className="flex flex-col gap-4 p-2">
+        <p className="font-semibold">¿Estás seguro de que quieres eliminar este Producto?</p>
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => toast.dismiss(t.id)}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => {
+              deleteProduct(id);
+              toast.dismiss(t.id);
+              toast.success('Producto eliminado correctamente');
+            }}
+          >
+            Eliminar
+          </Button>
+        </div>
+      </div>
+    ), {
+      duration: 5000,
+      position: 'top-center',
+      style: {
+        background: '#fff',
+        padding: '1rem',
+        borderRadius: '0.5rem',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      },
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -236,15 +269,15 @@ export default function ProductsPage() {
                           {product.sku}
                         </Badge>
                       </div>
-                      
+
                       <p className="text-sm text-gray-600 mb-3">{product.description}</p>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div className="space-y-1">
                           <p className="text-sm text-gray-600">Categoría: {product.category}</p>
                           <p className="text-sm text-gray-600">Proveedor: {product.supplier}</p>
                         </div>
-                        
+
                         <div className="space-y-1">
                           <p className="text-sm text-gray-600">
                             Precio: <span className="font-semibold text-green-600">${product.price}</span>
@@ -253,11 +286,11 @@ export default function ProductsPage() {
                             Valor total: <span className="font-semibold">${(product.price * product.stock).toFixed(2)}</span>
                           </p>
                         </div>
-                        
+
                         <div className="space-y-1">
                           <p className="text-sm text-gray-600">
                             Stock: <span className={`font-semibold ${
-                              product.stock === 0 ? 'text-red-600' : 
+                              product.stock === 0 ? 'text-red-600' :
                               product.stock <= product.minStock ? 'text-yellow-600' : 'text-green-600'
                             }`}>
                               {product.stock} unidades
@@ -265,7 +298,7 @@ export default function ProductsPage() {
                           </p>
                           <p className="text-sm text-gray-600">Stock mínimo: {product.minStock}</p>
                         </div>
-                        
+
                         <div className="space-y-1">
                           {product.stock <= product.minStock && product.stock > 0 && (
                             <div className="flex items-center text-yellow-600">
@@ -282,14 +315,14 @@ export default function ProductsPage() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="flex space-x-2">
                       <Button variant="ghost" size="sm" onClick={() => handleEditProduct(product)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleDeleteProduct(product.id)}
                         className="text-red-500 hover:text-red-700"
                       >

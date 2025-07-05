@@ -216,7 +216,7 @@ export default function ServiceForm({ isOpen, onClose, service, onSave }: Servic
               </Button>
               <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
                 <Save className="h-4 w-4 mr-2" />
-                {service ? 'Actualizar' : 'Guardar'} Servicio
+                {service.id ? 'Actualizar' : 'Guardar'} Servicio
               </Button>
             </div>
           </form>
