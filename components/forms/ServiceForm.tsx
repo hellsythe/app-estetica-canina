@@ -1,17 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { 
+import {
   X,
   Save,
   Scissors,
   Clock,
   DollarSign,
-  Package
 } from 'lucide-react';
 
 interface ServiceFormProps {
@@ -22,17 +20,11 @@ interface ServiceFormProps {
 }
 
 export default function ServiceForm({ isOpen, onClose, service, onSave }: ServiceFormProps) {
-  const [formData, setFormData] = useState({
-    name: service?.name || '',
-    description: service?.description || '',
-    price: service?.price || '',
-    duration: service?.duration || '',
-    category: service?.category || 'Básico',
-    status: service?.status || 'Activo',
-    requirements: service?.requirements || '',
-    includes: service?.includes || '',
-    notes: service?.notes || ''
-  });
+  const [formData, setFormData] = useState(service);
+  useEffect(() => {
+    setFormData(service);
+    setErrors({});
+  }, [service]);
 
   const [errors, setErrors] = useState<any>({});
 
@@ -50,7 +42,7 @@ export default function ServiceForm({ isOpen, onClose, service, onSave }: Servic
       ...prev,
       [field]: value
     }));
-    
+
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
@@ -59,47 +51,15 @@ export default function ServiceForm({ isOpen, onClose, service, onSave }: Servic
     }
   };
 
-  const validateForm = () => {
-    const newErrors: any = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'El nombre del servicio es requerido';
-    }
-
-    if (!formData.description.trim()) {
-      newErrors.description = 'La descripción es requerida';
-    }
-
-    if (!formData.price.trim()) {
-      newErrors.price = 'El precio es requerido';
-    } else if (isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
-      newErrors.price = 'El precio debe ser un número válido mayor a 0';
-    }
-
-    if (!formData.duration.trim()) {
-      newErrors.duration = 'La duración es requerida';
-    } else if (isNaN(Number(formData.duration)) || Number(formData.duration) <= 0) {
-      newErrors.duration = 'La duración debe ser un número válido mayor a 0';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (validateForm()) {
-      const serviceData = {
-        ...formData,
-        id: service?.id || Date.now(),
-        price: Number(formData.price),
-        duration: Number(formData.duration),
-        popularity: service?.popularity || Math.floor(Math.random() * 40) + 60 // Random popularity between 60-100
-      };
-      
-      onSave(serviceData);
+    try {
+      await onSave(formData);
       onClose();
+    } catch (error: any) {
+      if (error?.errors) {
+        setErrors(error.errors);
+      }
     }
   };
 
@@ -124,7 +84,7 @@ export default function ServiceForm({ isOpen, onClose, service, onSave }: Servic
             {/* Basic Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">Información Básica</h3>
-              
+
               <div>
                 <label className="block text-sm font-medium mb-2">Nombre del Servicio *</label>
                 <Input
@@ -214,7 +174,7 @@ export default function ServiceForm({ isOpen, onClose, service, onSave }: Servic
             {/* Additional Details */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">Detalles Adicionales</h3>
-              
+
               <div>
                 <label className="block text-sm font-medium mb-2">¿Qué incluye?</label>
                 <textarea

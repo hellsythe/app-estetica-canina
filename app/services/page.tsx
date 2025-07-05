@@ -7,11 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Scissors, 
-  Plus, 
-  Search, 
-  MoreHorizontal, 
+import {
+  Scissors,
+  Plus,
+  Search,
+  MoreHorizontal,
   Edit,
   Clock,
   DollarSign,
@@ -19,85 +19,90 @@ import {
   TrendingUp,
   Trash2
 } from 'lucide-react';
+import { Service } from '@/lib/api/services/service/service';
+import { useServices } from '@/hooks/useService';
+import toast from 'react-hot-toast';
 
 export default function ServicesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedService, setSelectedService] = useState(null);
-  const [services, setServices] = useState([
-    {
-      id: 1,
-      name: 'Baño y Corte Completo',
-      description: 'Servicio completo que incluye baño, secado, corte de pelo y uñas',
-      price: 45,
-      duration: 90,
-      category: 'Completo',
-      popularity: 95,
-      status: 'Activo',
-      includes: 'Baño con champú especializado, secado, corte de pelo, corte de uñas, limpieza de oídos',
-      requirements: 'Mascota vacunada, traer correa'
-    },
-    {
-      id: 2,
-      name: 'Baño Básico',
-      description: 'Baño con champú especializado y secado',
-      price: 25,
-      duration: 45,
-      category: 'Básico',
-      popularity: 88,
-      status: 'Activo',
-      includes: 'Baño con champú, secado básico',
-      requirements: 'Mascota vacunada'
-    },
-    {
-      id: 3,
-      name: 'Corte de Uñas',
-      description: 'Corte profesional de uñas y lima',
-      price: 15,
-      duration: 20,
-      category: 'Básico',
-      popularity: 72,
-      status: 'Activo',
-      includes: 'Corte de uñas, lima, revisión de almohadillas',
-      requirements: 'Ninguno especial'
-    },
-    {
-      id: 4,
-      name: 'Tratamiento Antipulgas',
-      description: 'Baño medicinal con productos antipulgas y antiparasitarios',
-      price: 35,
-      duration: 60,
-      category: 'Medicinal',
-      popularity: 65,
-      status: 'Activo',
-      includes: 'Baño medicinal, tratamiento antipulgas, secado',
-      requirements: 'Consulta veterinaria previa recomendada'
-    },
-    {
-      id: 5,
-      name: 'Corte Estilizado',
-      description: 'Corte de pelo con estilo personalizado según la raza',
-      price: 55,
-      duration: 120,
-      category: 'Premium',
-      popularity: 78,
-      status: 'Activo',
-      includes: 'Consulta de estilo, corte personalizado, acabado profesional',
-      requirements: 'Cita previa, mascota socializada'
-    },
-    {
-      id: 6,
-      name: 'Spa Canino',
-      description: 'Tratamiento completo de relajación y belleza',
-      price: 85,
-      duration: 180,
-      category: 'Premium',
-      popularity: 45,
-      status: 'Promocional',
-      includes: 'Baño relajante, masaje, aromaterapia, corte, manicura',
-      requirements: 'Reserva con 48 horas de anticipación'
-    }
-  ]);
+  const [selectedService, setSelectedService] = useState<Service>(new Service());
+  // const [services, setServices] = useState([
+  //   {
+  //     id: 1,
+  //     name: 'Baño y Corte Completo',
+  //     description: 'Servicio completo que incluye baño, secado, corte de pelo y uñas',
+  //     price: 45,
+  //     duration: 90,
+  //     category: 'Completo',
+  //     popularity: 95,
+  //     status: 'Activo',
+  //     includes: 'Baño con champú especializado, secado, corte de pelo, corte de uñas, limpieza de oídos',
+  //     requirements: 'Mascota vacunada, traer correa'
+  //   },
+  //   {
+  //     id: 2,
+  //     name: 'Baño Básico',
+  //     description: 'Baño con champú especializado y secado',
+  //     price: 25,
+  //     duration: 45,
+  //     category: 'Básico',
+  //     popularity: 88,
+  //     status: 'Activo',
+  //     includes: 'Baño con champú, secado básico',
+  //     requirements: 'Mascota vacunada'
+  //   },
+  //   {
+  //     id: 3,
+  //     name: 'Corte de Uñas',
+  //     description: 'Corte profesional de uñas y lima',
+  //     price: 15,
+  //     duration: 20,
+  //     category: 'Básico',
+  //     popularity: 72,
+  //     status: 'Activo',
+  //     includes: 'Corte de uñas, lima, revisión de almohadillas',
+  //     requirements: 'Ninguno especial'
+  //   },
+  //   {
+  //     id: 4,
+  //     name: 'Tratamiento Antipulgas',
+  //     description: 'Baño medicinal con productos antipulgas y antiparasitarios',
+  //     price: 35,
+  //     duration: 60,
+  //     category: 'Medicinal',
+  //     popularity: 65,
+  //     status: 'Activo',
+  //     includes: 'Baño medicinal, tratamiento antipulgas, secado',
+  //     requirements: 'Consulta veterinaria previa recomendada'
+  //   },
+  //   {
+  //     id: 5,
+  //     name: 'Corte Estilizado',
+  //     description: 'Corte de pelo con estilo personalizado según la raza',
+  //     price: 55,
+  //     duration: 120,
+  //     category: 'Premium',
+  //     popularity: 78,
+  //     status: 'Activo',
+  //     includes: 'Consulta de estilo, corte personalizado, acabado profesional',
+  //     requirements: 'Cita previa, mascota socializada'
+  //   },
+  //   {
+  //     id: 6,
+  //     name: 'Spa Canino',
+  //     description: 'Tratamiento completo de relajación y belleza',
+  //     price: 85,
+  //     duration: 180,
+  //     category: 'Premium',
+  //     popularity: 45,
+  //     status: 'Promocional',
+  //     includes: 'Baño relajante, masaje, aromaterapia, corte, manicura',
+  //     requirements: 'Reserva con 48 horas de anticipación'
+  //   }
+  // ]);
+
+  const { services, createService, updateService, deleteService } = useServices();
 
   const filteredServices = services.filter(service =>
     service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -114,7 +119,7 @@ export default function ServicesPage() {
   };
 
   const handleAddService = () => {
-    setSelectedService(null);
+    setSelectedService(new Service());
     setIsFormOpen(true);
   };
 
@@ -123,22 +128,64 @@ export default function ServicesPage() {
     setIsFormOpen(true);
   };
 
-  const handleSaveService = (serviceData: any) => {
-    if (selectedService) {
-      // Update existing service
-      setServices(prev => prev.map(service => 
-        service.id === serviceData.id ? serviceData : service
-      ));
+  const handleSaveService = async (serviceData: any) => {
+    if (selectedService.id) {
+      await updateService(selectedService.id, serviceData);
+      toast.success('Servicio actualizado correctamente');
     } else {
-      // Add new service
-      setServices(prev => [...prev, serviceData]);
+      await createService(serviceData);
+      toast.success('Servicio guardado correctamente');
     }
   };
 
-  const handleDeleteService = (id: number) => {
-    if (confirm('¿Estás seguro de que quieres eliminar este servicio?')) {
-      setServices(prev => prev.filter(service => service.id !== id));
-    }
+  // const handleDeleteService = (id: number) => {
+  //   if (confirm('¿Estás seguro de que quieres eliminar este servicio?')) {
+  //     setServices(prev => prev.filter(service => service.id !== id));
+  //   }
+  // };
+
+  const handleDeleteService = (id: string) => {
+    toast((t) => (
+      <div className="flex flex-col gap-4 p-2">
+        <p className="font-semibold">¿Estás seguro de que quieres eliminar este Servicio?</p>
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => toast.dismiss(t.id)}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => {
+              deleteService(id);
+              toast.dismiss(t.id);
+              toast.success('Servicio eliminado correctamente');
+            }}
+          >
+            Eliminar
+          </Button>
+        </div>
+      </div>
+    ), {
+      duration: 5000,
+      position: 'top-center',
+      style: {
+        background: '#fff',
+        padding: '1rem',
+        borderRadius: '0.5rem',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      },
+    });
+  };
+
+  const getMostPopularService = () => {
+    if (services.length === 0) return new Service();
+    return services.reduce((prev, current) => {
+      return (prev.popularity > current.popularity) ? prev : current;
+    });
   };
 
   return (
@@ -179,12 +226,11 @@ export default function ServicesPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Servicios</CardTitle>
+              <CardTitle className="text-sm font-medium">Total de Servicios</CardTitle>
               <Scissors className="h-4 w-4 text-gray-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{services.length}</div>
-              <p className="text-xs text-gray-500">+1 este mes</p>
             </CardContent>
           </Card>
           <Card>
@@ -194,7 +240,7 @@ export default function ServicesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">${Math.round(services.reduce((sum, s) => sum + s.price, 0) / services.length)}</div>
-              <p className="text-xs text-gray-500">+8% vs mes anterior</p>
+              {/* <p className="text-xs text-gray-500">+8% vs mes anterior</p> */}
             </CardContent>
           </Card>
           <Card>
@@ -213,8 +259,8 @@ export default function ServicesPage() {
               <Star className="h-4 w-4 text-yellow-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{Math.max(...services.map(s => s.popularity))}%</div>
-              <p className="text-xs text-gray-500">Baño y Corte Completo</p>
+              <div className="text-2xl font-bold">{getMostPopularService().popularity}%</div>
+              <p className="text-xs text-gray-500">{getMostPopularService().name}</p>
             </CardContent>
           </Card>
         </div>
@@ -233,9 +279,9 @@ export default function ServicesPage() {
                     <Button variant="ghost" size="sm" onClick={() => handleEditService(service)}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => handleDeleteService(service.id)}
                       className="text-red-500 hover:text-red-700"
                     >
@@ -257,12 +303,9 @@ export default function ServicesPage() {
                       {service.status}
                     </Badge>
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center">
-                      <div className="flex items-center justify-center mb-1">
-                        <DollarSign className="h-4 w-4 text-green-600" />
-                      </div>
                       <p className="text-2xl font-bold text-green-600">${service.price}</p>
                       <p className="text-xs text-gray-500">Precio</p>
                     </div>
@@ -274,7 +317,7 @@ export default function ServicesPage() {
                       <p className="text-xs text-gray-500">Minutos</p>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">Popularidad</span>
@@ -284,8 +327,8 @@ export default function ServicesPage() {
                       </div>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-green-500 h-2 rounded-full" 
+                      <div
+                        className="bg-green-500 h-2 rounded-full"
                         style={{ width: `${service.popularity}%` }}
                       ></div>
                     </div>

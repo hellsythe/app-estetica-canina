@@ -15,9 +15,7 @@ import {
   Edit,
   Trash2,
   Phone,
-  Mail,
   Calendar,
-  Clock
 } from 'lucide-react';
 import { useEmployees } from '@/hooks/useEmployees';
 import { Employee } from '@/lib/api/services/employee/employee';
