@@ -1,15 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  Users, 
-  Calendar, 
-  Scissors, 
-  ShoppingCart, 
-  MessageSquare, 
+import {
+  Users,
+  Calendar,
+  Scissors,
+  ShoppingCart,
+  MessageSquare,
   TrendingUp,
   DollarSign,
   Clock,
@@ -21,6 +21,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 export default function Dashboard() {
+
+
   const [selectedPeriod, setSelectedPeriod] = useState('today');
   const { user } = useAuth();
 

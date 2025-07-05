@@ -51,13 +51,13 @@ interface DashboardLayoutProps {
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard, module: 'dashboard' },
-  { name: 'Empleados', href: '/employees', icon: Users, module: 'employees' },
+  { name: 'Punto de Venta', href: '/pos', icon: ShoppingCart, module: 'pos' },
+  { name: 'Citas', href: '/appointments', icon: Calendar, module: 'appointments' },
   { name: 'Clientes', href: '/clients', icon: Users, module: 'clients' },
   { name: 'Servicios', href: '/services', icon: Scissors, module: 'services' },
-  { name: 'Citas', href: '/appointments', icon: Calendar, module: 'appointments' },
-  { name: 'Mensajería', href: '/messages', icon: MessageSquare, module: 'messages' },
-  { name: 'Punto de Venta', href: '/pos', icon: ShoppingCart, module: 'pos' },
   { name: 'Productos', href: '/products', icon: Package, module: 'products' },
+  { name: 'Empleados', href: '/employees', icon: Users, module: 'employees' },
+  { name: 'Mensajería', href: '/messages', icon: MessageSquare, module: 'messages' },
   { name: 'Cupones', href: '/coupons', icon: Ticket, module: 'coupons' },
   { name: 'Marketing', href: '/marketing', icon: Megaphone, module: 'marketing' },
   { name: 'Redes Sociales', href: '/social-sharing', icon: Share2, module: 'social-sharing' },

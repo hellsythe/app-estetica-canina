@@ -148,7 +148,6 @@ export default function EmployeesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{employees.length}</div>
-              <p className="text-xs text-gray-500">+1 este mes</p>
             </CardContent>
           </Card>
           <Card>

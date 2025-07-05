@@ -17,7 +17,6 @@ export const useEmployees = () => {
       throw err;
     } finally {
       setIsLoading(false);
-
     }
   };
 

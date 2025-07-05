@@ -1,31 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
+import {
   X,
   Save,
   User,
-  Mail,
-  Phone,
-  MapPin,
   Heart,
   Plus,
   Trash2
 } from 'lucide-react';
-
-interface Pet {
-  id: number;
-  name: string;
-  breed: string;
-  age: string;
-  weight: string;
-  color: string;
-  notes: string;
-}
+import { Client, Pet } from '@/lib/api/services/client/client';
 
 interface ClientFormProps {
   isOpen: boolean;
@@ -35,26 +23,25 @@ interface ClientFormProps {
 }
 
 export default function ClientForm({ isOpen, onClose, client, onSave }: ClientFormProps) {
-  const [formData, setFormData] = useState({
-    name: client?.name || '',
-    email: client?.email || '',
-    phone: client?.phone || '',
-    address: client?.address || '',
-    emergencyContact: client?.emergencyContact || '',
-    emergencyPhone: client?.emergencyPhone || '',
-    notes: client?.notes || '',
-    status: client?.status || 'Activo'
-  });
+  const [formData, setFormData] = useState<Client>(client);
+  useEffect(() => {
+    setFormData(client);
+    setErrors({});
+  }, [client]);
 
   const [pets, setPets] = useState<Pet[]>(client?.pets?.map((pet: any, index: number) => ({
-    id: index + 1,
     name: pet.name || '',
     breed: pet.breed || '',
     age: pet.age || '',
     weight: '',
     color: '',
-    notes: ''
+    notes: '',
+    id: index + 1,
   })) || []);
+
+  useEffect(() => {
+    setPets(client.pets);
+  }, [client.pets]);
 
   const [errors, setErrors] = useState<any>({});
 
@@ -63,7 +50,7 @@ export default function ClientForm({ isOpen, onClose, client, onSave }: ClientFo
       ...prev,
       [field]: value
     }));
-    
+
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
@@ -73,7 +60,7 @@ export default function ClientForm({ isOpen, onClose, client, onSave }: ClientFo
   };
 
   const handlePetChange = (petId: number, field: string, value: string) => {
-    setPets(prev => prev.map(pet => 
+    setPets(prev => prev.map(pet =>
       pet.id === petId ? { ...pet, [field]: value } : pet
     ));
   };
@@ -83,8 +70,8 @@ export default function ClientForm({ isOpen, onClose, client, onSave }: ClientFo
       id: Date.now(),
       name: '',
       breed: '',
-      age: '',
-      weight: '',
+      age: 0,
+      weight: 0,
       color: '',
       notes: ''
     };
@@ -95,54 +82,21 @@ export default function ClientForm({ isOpen, onClose, client, onSave }: ClientFo
     setPets(prev => prev.filter(pet => pet.id !== petId));
   };
 
-  const validateForm = () => {
-    const newErrors: any = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'El nombre es requerido';
-    }
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'El email es requerido';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email inválido';
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'El teléfono es requerido';
-    }
-
-    if (pets.length === 0) {
-      newErrors.pets = 'Debe agregar al menos una mascota';
-    } else {
-      pets.forEach((pet, index) => {
-        if (!pet.name.trim()) {
-          newErrors[`pet_${index}_name`] = 'El nombre de la mascota es requerido';
-        }
-        if (!pet.breed.trim()) {
-          newErrors[`pet_${index}_breed`] = 'La raza es requerida';
-        }
-      });
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (validateForm()) {
-      const clientData = {
-        ...formData,
-        id: client?.id || Date.now(),
+
+      try {
+      await onSave({
+      ...formData,
         pets: pets.filter(pet => pet.name.trim()),
-        lastVisit: client?.lastVisit || new Date().toISOString().split('T')[0],
-        totalVisits: client?.totalVisits || 0
-      };
-      
-      onSave(clientData);
+    });
       onClose();
+    } catch (error: any) {
+      if (error?.errors) {
+        setErrors(error.errors);
+      }
     }
   };
 
@@ -167,7 +121,7 @@ export default function ClientForm({ isOpen, onClose, client, onSave }: ClientFo
             {/* Client Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">Información del Cliente</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Nombre Completo *</label>
@@ -195,12 +149,12 @@ export default function ClientForm({ isOpen, onClose, client, onSave }: ClientFo
                 <div>
                   <label className="block text-sm font-medium mb-2">Teléfono *</label>
                   <Input
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                    placeholder="+1 (555) 123-4567"
-                    className={errors.phone ? 'border-red-500' : ''}
+                    value={formData.phoneNumber}
+                    onChange={(e) => handleInputChange('phoneNumber', e.target.value)}
+                    placeholder="274 109 2556"
+                    className={errors.phoneNumber ? 'border-red-500' : ''}
                   />
-                  {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                  {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>}
                 </div>
 
                 <div>
@@ -211,43 +165,8 @@ export default function ClientForm({ isOpen, onClose, client, onSave }: ClientFo
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="Activo">Activo</option>
-                    <option value="VIP">VIP</option>
                     <option value="Inactivo">Inactivo</option>
                   </select>
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-2">Dirección</label>
-                  <Input
-                    value={formData.address}
-                    onChange={(e) => handleInputChange('address', e.target.value)}
-                    placeholder="Calle Principal 123, Ciudad"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Emergency Contact */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Contacto de Emergencia</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Nombre del Contacto</label>
-                  <Input
-                    value={formData.emergencyContact}
-                    onChange={(e) => handleInputChange('emergencyContact', e.target.value)}
-                    placeholder="Nombre del familiar o contacto"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">Teléfono de Emergencia</label>
-                  <Input
-                    value={formData.emergencyPhone}
-                    onChange={(e) => handleInputChange('emergencyPhone', e.target.value)}
-                    placeholder="+1 (555) 987-6543"
-                  />
                 </div>
               </div>
             </div>
@@ -261,9 +180,9 @@ export default function ClientForm({ isOpen, onClose, client, onSave }: ClientFo
                   Agregar Mascota
                 </Button>
               </div>
-              
+
               {errors.pets && <p className="text-red-500 text-sm">{errors.pets}</p>}
-              
+
               <div className="space-y-4">
                 {pets.map((pet, index) => (
                   <Card key={pet.id} className="border-2 border-dashed border-gray-200">
@@ -285,7 +204,7 @@ export default function ClientForm({ isOpen, onClose, client, onSave }: ClientFo
                           </Button>
                         )}
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                           <label className="block text-sm font-medium mb-2">Nombre *</label>

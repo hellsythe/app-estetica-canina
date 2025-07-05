@@ -10,7 +10,6 @@ import {
   User,
 } from 'lucide-react';
 import { Employee } from '@/lib/api/services/employee/employee';
-import { Toaster, toast } from 'react-hot-toast';
 
 interface EmployeeFormProps {
   isOpen: boolean;
