@@ -3,17 +3,15 @@
 import { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import AppointmentForm from '@/components/forms/AppointmentForm';
-import SyncStatusIndicator from '@/components/ui/SyncStatusIndicator';
-import { useAppointments } from '@/hooks/useOfflineSync';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Calendar, 
-  Plus, 
-  Search, 
-  MoreHorizontal, 
+import {
+  Calendar,
+  Plus,
+  Search,
+  MoreHorizontal,
   Edit,
   Clock,
   User,
@@ -27,8 +25,7 @@ import {
   ChevronRight,
   List,
   CalendarDays,
-  Trash2,
-  WifiOff
+  Trash2
 } from 'lucide-react';
 
 export default function AppointmentsPage() {
@@ -39,12 +36,103 @@ export default function AppointmentsPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
 
-  const { appointments, addAppointment, updateAppointment, deleteAppointment, syncStatus } = useAppointments();
+  const [appointments, setAppointments] = useState([
+    {
+      id: 1,
+      client: 'María González',
+      pet: 'Max',
+      breed: 'Golden Retriever',
+      service: 'Baño y Corte Completo',
+      date: '2024-01-15',
+      time: '10:00 AM',
+      duration: 90,
+      price: 45,
+      status: 'Confirmado',
+      phone: '+1 (555) 123-4567',
+      email: 'maria.gonzalez@email.com',
+      notes: 'Mascota muy tranquila, le gusta el agua tibia'
+    },
+    {
+      id: 2,
+      client: 'Carlos Ruiz',
+      pet: 'Luna',
+      breed: 'Poodle',
+      service: 'Corte de Uñas',
+      date: '2024-01-15',
+      time: '11:30 AM',
+      duration: 20,
+      price: 15,
+      status: 'En Proceso',
+      phone: '+1 (555) 234-5678',
+      email: 'carlos.ruiz@email.com',
+      notes: 'Primera vez, puede estar nerviosa'
+    },
+    {
+      id: 3,
+      client: 'Ana Martínez',
+      pet: 'Rocky',
+      breed: 'Pastor Alemán',
+      service: 'Baño Medicinal',
+      date: '2024-01-15',
+      time: '2:00 PM',
+      duration: 60,
+      price: 35,
+      status: 'Pendiente',
+      phone: '+1 (555) 345-6789',
+      email: 'ana.martinez@email.com',
+      notes: 'Tratamiento para dermatitis'
+    },
+    {
+      id: 4,
+      client: 'Luis Fernández',
+      pet: 'Toby',
+      breed: 'Beagle',
+      service: 'Baño y Corte Completo',
+      date: '2024-01-16',
+      time: '3:30 PM',
+      duration: 90,
+      price: 45,
+      status: 'Confirmado',
+      phone: '+1 (555) 456-7890',
+      email: 'luis.fernandez@email.com',
+      notes: 'Cliente regular'
+    },
+    {
+      id: 5,
+      client: 'Carmen Silva',
+      pet: 'Bella',
+      breed: 'Labrador',
+      service: 'Corte Estilizado',
+      date: '2024-01-17',
+      time: '4:00 PM',
+      duration: 120,
+      price: 55,
+      status: 'Confirmado',
+      phone: '+1 (555) 567-8901',
+      email: 'carmen.silva@email.com',
+      notes: 'Corte especial para competencia'
+    },
+    {
+      id: 6,
+      client: 'Roberto Díaz',
+      pet: 'Zeus',
+      breed: 'Rottweiler',
+      service: 'Baño Básico',
+      date: '2024-01-18',
+      time: '10:00 AM',
+      duration: 45,
+      price: 25,
+      status: 'Pendiente',
+      phone: '+1 (555) 678-9012',
+      email: 'roberto.diaz@email.com',
+      notes: 'Perro grande, necesita espacio'
+    }
+  ]);
 
   const filteredAppointments = appointments.filter(appointment =>
-    appointment.client?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    appointment.pet?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    appointment.service?.toLowerCase().includes(searchTerm.toLowerCase())
+    appointment.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    appointment.pet.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    appointment.service.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleAddAppointment = () => {
@@ -59,15 +147,19 @@ export default function AppointmentsPage() {
 
   const handleSaveAppointment = (appointmentData: any) => {
     if (selectedAppointment) {
-      updateAppointment(selectedAppointment.id, appointmentData);
+      // Update existing appointment
+      setAppointments(prev => prev.map(apt =>
+        apt.id === appointmentData.id ? appointmentData : apt
+      ));
     } else {
-      addAppointment(appointmentData);
+      // Add new appointment
+      setAppointments(prev => [...prev, appointmentData]);
     }
   };
 
   const handleDeleteAppointment = (id: number) => {
     if (confirm('¿Estás seguro de que quieres eliminar esta cita?')) {
-      deleteAppointment(id);
+      setAppointments(prev => prev.filter(apt => apt.id !== id));
     }
   };
 
@@ -261,14 +353,8 @@ export default function AppointmentsPage() {
                         <span>{appointment.status}</span>
                       </div>
                     </Badge>
-                    {!syncStatus.isOnline && (
-                      <Badge variant="outline" className="text-amber-600 border-amber-300">
-                        <WifiOff className="h-3 w-3 mr-1" />
-                        Local
-                      </Badge>
-                    )}
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <div className="flex items-center text-sm">
@@ -283,7 +369,7 @@ export default function AppointmentsPage() {
                         {appointment.service}
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <div className="flex items-center text-sm text-gray-600">
                         <Phone className="h-4 w-4 mr-2 text-gray-400" />
@@ -294,12 +380,12 @@ export default function AppointmentsPage() {
                         {appointment.email}
                       </div>
                       <div className="text-sm text-gray-600">
-                        <span className="font-medium">Duración:</span> {appointment.duration} min | 
+                        <span className="font-medium">Duración:</span> {appointment.duration} min |
                         <span className="font-medium"> Precio:</span> ${appointment.price}
                       </div>
                     </div>
                   </div>
-                  
+
                   {appointment.notes && (
                     <div className="mt-3 p-3 bg-blue-50 rounded-lg">
                       <p className="text-sm text-blue-800">
@@ -308,14 +394,14 @@ export default function AppointmentsPage() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="flex space-x-2">
                   <Button variant="ghost" size="sm" onClick={() => handleEditAppointment(appointment)}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => handleDeleteAppointment(appointment.id)}
                     className="text-red-500 hover:text-red-700"
                   >
@@ -345,23 +431,12 @@ export default function AppointmentsPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Citas</h1>
-            <div className="flex items-center gap-4">
-              <p className="text-gray-600">Gestiona las citas y horarios de tu estética canina</p>
-              {!syncStatus.isOnline && (
-                <div className="flex items-center gap-2 text-amber-600">
-                  <WifiOff className="h-4 w-4" />
-                  <span className="text-sm">Modo offline</span>
-                </div>
-              )}
-            </div>
+            <p className="text-gray-600">Gestiona las citas y horarios de tu estética canina</p>
           </div>
-          <div className="flex items-center gap-3">
-            <SyncStatusIndicator showDetails={false} />
-            <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleAddAppointment}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nueva Cita
-            </Button>
-          </div>
+          <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleAddAppointment}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nueva Cita
+          </Button>
         </div>
 
         {/* Search and Filters */}
@@ -421,47 +496,25 @@ export default function AppointmentsPage() {
               <Scissors className="h-4 w-4 text-purple-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${appointments.reduce((sum, apt) => sum + (apt.price || 0), 0)}</div>
+              <div className="text-2xl font-bold">${appointments.reduce((sum, apt) => sum + apt.price, 0)}</div>
               <p className="text-xs text-gray-500">{appointments.length} servicios</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Sync Status Details */}
-        {syncStatus.pendingSync > 0 && (
-          <Card className="border-amber-200 bg-amber-50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <WifiOff className="h-5 w-5 text-amber-600" />
-                  <div>
-                    <p className="font-medium text-amber-800">
-                      {syncStatus.pendingSync} cambios pendientes de sincronización
-                    </p>
-                    <p className="text-sm text-amber-600">
-                      Las citas se guardarán localmente y se sincronizarán cuando vuelva la conexión
-                    </p>
-                  </div>
-                </div>
-                <SyncStatusIndicator showDetails={true} className="w-64" />
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Calendar View Toggle */}
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
-            <Button 
-              variant={viewMode === 'list' ? 'default' : 'outline'} 
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setViewMode('list')}
             >
               <List className="h-4 w-4 mr-2" />
               Vista Lista
             </Button>
-            <Button 
-              variant={viewMode === 'calendar' ? 'default' : 'outline'} 
+            <Button
+              variant={viewMode === 'calendar' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setViewMode('calendar')}
             >

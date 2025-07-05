@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import ClientForm from '@/components/forms/ClientForm';
-import SyncStatusIndicator from '@/components/ui/SyncStatusIndicator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -127,7 +126,6 @@ export default function ClientsPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <SyncStatusIndicator showDetails={false} />
             <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleAddClient}>
               <Plus className="h-4 w-4 mr-2" />
               Agregar Cliente
