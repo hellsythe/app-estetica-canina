@@ -149,7 +149,7 @@ export default function POSPage() {
     setClientSearchTerm(value);
     setShowClientDropdown(value.length > 0);
     setShowNewClientForm(false);
-    
+
     // Si está buscando, limpiar la selección actual
     if (selectedClient && !value.includes(selectedClient.name)) {
       setSelectedClient(null);
@@ -174,7 +174,7 @@ export default function POSPage() {
       ...prev,
       [field]: value
     }));
-    
+
     if (newClientErrors[field]) {
       setNewClientErrors(prev => ({
         ...prev,
@@ -219,12 +219,12 @@ export default function POSPage() {
           phoneNumber: newClient.phoneNumber,
           address: newClient.address || ''
         });
-        
+
         setClientSearchTerm(newClient.name);
         setShowNewClientForm(false);
         setShowClientDropdown(false);
         setNewClientData({ name: '', email: '', phoneNumber: '', address: '' });
-        
+
         toast.success('Cliente creado exitosamente');
       } catch (error) {
         toast.error('Error al crear el cliente');
@@ -240,7 +240,7 @@ export default function POSPage() {
 
     // Aquí implementarías la lógica para procesar la venta
     toast.success(`Venta procesada por $${total.toFixed(2)}`);
-    
+
     // Limpiar después de procesar
     setCart([]);
     setSelectedClient(null);
@@ -314,7 +314,7 @@ export default function POSPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-4 relative">
                   {/* Client Search */}
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -393,7 +393,7 @@ export default function POSPage() {
                           </div>
                         </>
                       ) : (
-                        <div className="p-3">
+                        <div className="p-3 relative" style={{ position: 'relative' }}>
                           <p className="text-sm text-gray-500 mb-3">No se encontraron clientes</p>
                           <Button
                             variant="outline"
@@ -481,7 +481,7 @@ export default function POSPage() {
                             <p className="text-red-500 text-xs mt-1">{newClientErrors.name}</p>
                           )}
                         </div>
-                        
+
                         <div>
                           <Input
                             placeholder="Teléfono *"
@@ -493,7 +493,7 @@ export default function POSPage() {
                             <p className="text-red-500 text-xs mt-1">{newClientErrors.phoneNumber}</p>
                           )}
                         </div>
-                        
+
                         <div>
                           <Input
                             placeholder="Email (opcional)"
@@ -506,15 +506,7 @@ export default function POSPage() {
                             <p className="text-red-500 text-xs mt-1">{newClientErrors.email}</p>
                           )}
                         </div>
-                        
-                        <div>
-                          <Input
-                            placeholder="Dirección (opcional)"
-                            value={newClientData.address}
-                            onChange={(e) => handleNewClientChange('address', e.target.value)}
-                          />
-                        </div>
-                        
+
                         <div className="flex gap-2">
                           <Button
                             variant="outline"
