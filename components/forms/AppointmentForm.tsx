@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,25 +9,20 @@ import {
   X,
   Save,
   Calendar,
-  Clock,
-  User,
-  Scissors,
   Search,
   Plus,
   Phone,
   Mail,
-  MapPin,
   Heart,
-  Filter,
   Users,
-  Edit,
-  Trash2
 } from 'lucide-react';
 import { useClients } from '@/hooks/useClient';
 import { useServices } from '@/hooks/useService';
 import { useEmployees } from '@/hooks/useEmployees';
 import toast from 'react-hot-toast';
 import { Appointment } from '@/lib/api/services/appointment/appointment';
+import { Client, Pet } from '@/lib/api/services/client/client';
+import { set } from 'date-fns';
 
 interface AppointmentFormProps {
   isOpen: boolean;
@@ -36,18 +31,22 @@ interface AppointmentFormProps {
   onSave: (appointment: any) => void;
 }
 
-interface Pet {
-  id?: number;
-  name: string;
-  breed: string;
-  age: string;
-  weight?: string;
-  color?: string;
-  notes?: string;
-}
 
 export default function AppointmentForm({ isOpen, onClose, appointment, onSave }: AppointmentFormProps) {
   const [formData, setFormData] = useState<Appointment>(appointment);
+  useEffect(() => {
+    setFormData(appointment);
+    if (appointment.client) {
+      setSelectedClient(appointment.client);
+      setSelectedPet(appointment.pet);
+      setFormData(prev => ({
+        ...prev,
+        date: new Date(appointment.date).toISOString().split('T')[0],
+      }));
+    }
+    setErrors({});
+  }, [appointment]);
+
 
   const [errors, setErrors] = useState<any>({});
   const [isNewClient, setIsNewClient] = useState(false);
@@ -56,14 +55,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
   const [showAddPetForm, setShowAddPetForm] = useState(false);
-  const [newPetData, setNewPetData] = useState<Pet>({
-    name: '',
-    breed: '',
-    age: '',
-    weight: '',
-    color: '',
-    notes: ''
-  });
+  const [newPetData, setNewPetData] = useState<Pet>(new Pet());
   const [petErrors, setPetErrors] = useState<any>({});
 
   const { clients, createClient } = useClients();
@@ -99,6 +91,20 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
     }
   };
 
+  const handleInputChangeClient = (field: string, value: string) => {
+    setSelectedClient(prev => ({
+      ...prev,
+      [field]: value
+    }));
+
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
+  };
+
   const handleClientSearch = (value: string) => {
     setClientSearchTerm(value);
     setShowClientDropdown(value.length > 0);
@@ -109,11 +115,8 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
       setSelectedPet(null);
       setFormData(prev => ({
         ...prev,
-        clientName: value,
-        clientPhone: '',
-        clientEmail: '',
-        petName: '',
-        petBreed: ''
+        pet: null,
+        client: null,
       }));
     }
   };
@@ -127,24 +130,25 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
 
     setFormData(prev => ({
       ...prev,
-      clientName: client.name,
-      clientPhone: client.phoneNumber,
-      clientEmail: client.email,
-      petName: '',
-      petBreed: ''
+      client: client,
+      pet: null,
     }));
+
+    setErrors(prev => ({
+        ...prev,
+        ['client']: ''
+      }));
   };
 
   const handlePetSelect = (pet: any) => {
     setSelectedPet(pet);
     setFormData(prev => ({
       ...prev,
-      petName: pet.name,
-      petBreed: pet.breed
+      pet: pet,
     }));
   };
 
-  const handleNewPetChange = (field: string, value: string) => {
+  const handleNewPetChange = (field: string, value: any) => {
     setNewPetData(prev => ({
       ...prev,
       [field]: value
@@ -170,6 +174,10 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
     }
 
     setPetErrors(newErrors);
+    setErrors(prev => ({
+      ...prev,
+      ['pet']: ''
+    }));
     return Object.keys(newErrors).length === 0;
   };
 
@@ -196,14 +204,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
       handlePetSelect(newPetData);
 
       // Limpiar el formulario de nueva mascota
-      setNewPetData({
-        name: '',
-        breed: '',
-        age: '',
-        weight: '',
-        color: '',
-        notes: ''
-      });
+      setNewPetData(new Pet());
       setShowAddPetForm(false);
       setPetErrors({});
 
@@ -216,9 +217,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
   const handleServiceSelect = (service: any) => {
     setFormData(prev => ({
       ...prev,
-      service: service.name,
-      duration: service.duration,
-      price: service.price.toString()
+      service: service,
     }));
   };
 
@@ -241,13 +240,9 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
     try {
       const appointmentData = {
         ...formData,
-        client: formData.clientName,
-        pet: formData.petName,
-        breed: formData.petBreed,
-        price: Number(formData.price),
-        duration: Number(formData.duration),
-        clientInfo: selectedClient,
-        petInfo: selectedPet
+        client: selectedClient,
+        pet: selectedPet,
+        // service: selectedService,
       };
 
       await onSave(appointmentData);
@@ -288,8 +283,8 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
                   size="sm"
                   onClick={() => {
                     setIsNewClient(!isNewClient);
-                    setSelectedClient(null);
-                    setSelectedPet(null);
+                    setSelectedClient(new Client());
+                    setSelectedPet(new Pet());
                     setClientSearchTerm('');
                     setShowClientDropdown(false);
                   }}
@@ -323,6 +318,8 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
                         className="pl-10"
                       />
                     </div>
+                    {errors.client && <p className="text-red-500 text-sm">{errors.client}</p>}
+
 
                     {/* Client Dropdown */}
                     {showClientDropdown && filteredClients.length > 0 && (
@@ -368,7 +365,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
                   </div>
 
                   {/* Selected Client Info */}
-                  {selectedClient && (
+                  {selectedClient.name && (
                     <Card className="bg-blue-50 border-blue-200">
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
@@ -410,31 +407,31 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
                   <div>
                     <label className="block text-sm font-medium mb-2">Nombre *</label>
                     <Input
-                      value={formData.clientName}
-                      onChange={(e) => handleInputChange('clientName', e.target.value)}
+                      value={selectedClient.name}
+                      onChange={(e) => handleInputChangeClient('name', e.target.value)}
                       placeholder="Nombre del cliente"
-                      className={errors.clientName ? 'border-red-500' : ''}
+                      className={errors.name ? 'border-red-500' : ''}
                     />
-                    {errors.clientName && <p className="text-red-500 text-xs mt-1">{errors.clientName}</p>}
+                    {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium mb-2">Teléfono *</label>
                     <Input
-                      value={formData.clientPhone}
-                      onChange={(e) => handleInputChange('clientPhone', e.target.value)}
+                      value={selectedClient.phoneNumber}
+                      onChange={(e) => handleInputChangeClient('phoneNumber', e.target.value)}
                       placeholder="+1 (555) 123-4567"
-                      className={errors.clientPhone ? 'border-red-500' : ''}
+                      className={errors.phoneNumber ? 'border-red-500' : ''}
                     />
-                    {errors.clientPhone && <p className="text-red-500 text-xs mt-1">{errors.clientPhone}</p>}
+                    {errors.phoneNumber && <p className="text-red-500 text-xs mt-1">{errors.phoneNumber}</p>}
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium mb-2">Email</label>
                     <Input
                       type="email"
-                      value={formData.clientEmail}
-                      onChange={(e) => handleInputChange('clientEmail', e.target.value)}
+                      value={selectedClient.email}
+                      onChange={(e) => handleInputChangeClient('email', e.target.value)}
                       placeholder="cliente@email.com"
                     />
                   </div>
@@ -470,14 +467,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
                           size="sm"
                           onClick={() => {
                             setShowAddPetForm(false);
-                            setNewPetData({
-                              name: '',
-                              breed: '',
-                              age: '',
-                              weight: '',
-                              color: '',
-                              notes: ''
-                            });
+                            setNewPetData(new Pet());
                             setPetErrors({});
                           }}
                           className="h-6 w-6 p-0"
@@ -564,9 +554,10 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
                   </Card>
                 )}
 
+
                 {/* Pet Selection Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {selectedClient.pets.map((pet: any, index: number) => (
+                  {selectedClient.pets?.map((pet: any, index: number) => (
                     <Card
                       key={index}
                       className={`cursor-pointer transition-colors ${
@@ -597,44 +588,18 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
                   ))}
                 </div>
 
-                {selectedClient.pets.length === 0 && !showAddPetForm && (
+                {selectedClient.pets?.length === 0 && !showAddPetForm && (
                   <div className="text-center py-6 text-gray-500">
                     <Heart className="h-8 w-8 mx-auto mb-2 text-gray-300" />
                     <p>Este cliente no tiene mascotas registradas</p>
-                    <p className="text-sm">Haz clic en "Agregar Mascota" para registrar una</p>
+                    <p className="text-sm">Haz clic en Agregar Mascota para registrar una</p>
                   </div>
                 )}
               </div>
             )}
+                {errors.pet && <p className="text-red-500 text-sm">{errors.pet}</p>}
 
-            {/* Manual Pet Information for New Clients */}
-            {(isNewClient) && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900">Información de la Mascota</h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Nombre de la Mascota *</label>
-                    <Input
-                      value={formData.petName}
-                      onChange={(e) => handleInputChange('petName', e.target.value)}
-                      placeholder="Ej: Max"
-                      className={errors.petName ? 'border-red-500' : ''}
-                    />
-                    {errors.petName && <p className="text-red-500 text-xs mt-1">{errors.petName}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Raza</label>
-                    <Input
-                      value={formData.petBreed}
-                      onChange={(e) => handleInputChange('petBreed', e.target.value)}
-                      placeholder="Ej: Golden Retriever"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Service Selection */}
             <div className="space-y-4">
@@ -645,7 +610,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
                   <Card
                     key={service.id}
                     className={`cursor-pointer transition-colors ${
-                      formData.service === service.name ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'
+                      formData.service.id === service.id ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'
                     }`}
                     onClick={() => handleServiceSelect(service)}
                   >
@@ -670,7 +635,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">Fecha y Hora</h3>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Fecha *</label>
                   <Input
@@ -699,28 +664,6 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
                   {errors.time && <p className="text-red-500 text-xs mt-1">{errors.time}</p>}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Duración (min)</label>
-                  <Input
-                    type="number"
-                    value={formData.duration}
-                    onChange={(e) => handleInputChange('duration', e.target.value)}
-                    placeholder="90"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">Precio ($) *</label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => handleInputChange('price', e.target.value)}
-                    placeholder="45.00"
-                    className={errors.price ? 'border-red-500' : ''}
-                  />
-                  {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price}</p>}
-                </div>
               </div>
             </div>
 

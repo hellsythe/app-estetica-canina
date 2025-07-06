@@ -33,110 +33,17 @@ import toast from 'react-hot-toast';
 
 export default function AppointmentsPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDate, setSelectedDate] = useState('2024-01-15');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
-  const [currentMonth, setCurrentMonth] = useState(new Date(2024, 0, 15)); // January 2024
+  const [currentMonth, setCurrentMonth] = useState(new Date()); // January 2024
   const [isFormOpen, setIsFormOpen] = useState(false);
   const { appointments, createAppointment, updateAppointment, deleteAppointment } = useAppointments();
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment>(new Appointment());
 
-  // const [appointments, setAppointments] = useState([
-  //   {
-  //     id: 1,
-  //     client: 'María González',
-  //     pet: 'Max',
-  //     breed: 'Golden Retriever',
-  //     service: 'Baño y Corte Completo',
-  //     date: '2024-01-15',
-  //     time: '10:00 AM',
-  //     duration: 90,
-  //     price: 45,
-  //     status: 'Confirmado',
-  //     phone: '+1 (555) 123-4567',
-  //     email: 'maria.gonzalez@email.com',
-  //     notes: 'Mascota muy tranquila, le gusta el agua tibia'
-  //   },
-  //   {
-  //     id: 2,
-  //     client: 'Carlos Ruiz',
-  //     pet: 'Luna',
-  //     breed: 'Poodle',
-  //     service: 'Corte de Uñas',
-  //     date: '2024-01-15',
-  //     time: '11:30 AM',
-  //     duration: 20,
-  //     price: 15,
-  //     status: 'En Proceso',
-  //     phone: '+1 (555) 234-5678',
-  //     email: 'carlos.ruiz@email.com',
-  //     notes: 'Primera vez, puede estar nerviosa'
-  //   },
-  //   {
-  //     id: 3,
-  //     client: 'Ana Martínez',
-  //     pet: 'Rocky',
-  //     breed: 'Pastor Alemán',
-  //     service: 'Baño Medicinal',
-  //     date: '2024-01-15',
-  //     time: '2:00 PM',
-  //     duration: 60,
-  //     price: 35,
-  //     status: 'Pendiente',
-  //     phone: '+1 (555) 345-6789',
-  //     email: 'ana.martinez@email.com',
-  //     notes: 'Tratamiento para dermatitis'
-  //   },
-  //   {
-  //     id: 4,
-  //     client: 'Luis Fernández',
-  //     pet: 'Toby',
-  //     breed: 'Beagle',
-  //     service: 'Baño y Corte Completo',
-  //     date: '2024-01-16',
-  //     time: '3:30 PM',
-  //     duration: 90,
-  //     price: 45,
-  //     status: 'Confirmado',
-  //     phone: '+1 (555) 456-7890',
-  //     email: 'luis.fernandez@email.com',
-  //     notes: 'Cliente regular'
-  //   },
-  //   {
-  //     id: 5,
-  //     client: 'Carmen Silva',
-  //     pet: 'Bella',
-  //     breed: 'Labrador',
-  //     service: 'Corte Estilizado',
-  //     date: '2024-01-17',
-  //     time: '4:00 PM',
-  //     duration: 120,
-  //     price: 55,
-  //     status: 'Confirmado',
-  //     phone: '+1 (555) 567-8901',
-  //     email: 'carmen.silva@email.com',
-  //     notes: 'Corte especial para competencia'
-  //   },
-  //   {
-  //     id: 6,
-  //     client: 'Roberto Díaz',
-  //     pet: 'Zeus',
-  //     breed: 'Rottweiler',
-  //     service: 'Baño Básico',
-  //     date: '2024-01-18',
-  //     time: '10:00 AM',
-  //     duration: 45,
-  //     price: 25,
-  //     status: 'Pendiente',
-  //     phone: '+1 (555) 678-9012',
-  //     email: 'roberto.diaz@email.com',
-  //     notes: 'Perro grande, necesita espacio'
-  //   }
-  // ]);
-
   const filteredAppointments = appointments.filter(appointment =>
-    appointment.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    appointment.pet.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    appointment.service.toLowerCase().includes(searchTerm.toLowerCase())
+    appointment.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    appointment.pet.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    appointment.service.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleAddAppointment = () => {
@@ -244,7 +151,8 @@ export default function AppointmentsPage() {
   };
 
   const getAppointmentsForDate = (dateStr: string) => {
-    return appointments.filter(apt => apt.date === dateStr);
+
+    return appointments.filter(apt => new Date(apt.date).toDateString() === new Date(dateStr).toDateString());
   };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -303,10 +211,10 @@ export default function AppointmentsPage() {
               <div
                 key={apt.id}
                 className={`text-xs p-1 rounded truncate ${getStatusColor(apt.status)}`}
-                title={`${apt.time} - ${apt.client} (${apt.pet})`}
+                title={`${apt.time} - ${apt.client.name} (${apt.pet.name})`}
               >
                 <div className="font-medium">{apt.time}</div>
-                <div className="truncate">{apt.client}</div>
+                <div className="truncate">{apt.client.name}</div>
               </div>
             ))}
             {dayAppointments.length > 3 && (
@@ -371,7 +279,7 @@ export default function AppointmentsPage() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {filteredAppointments.filter(apt => apt.date === selectedDate).map((appointment) => (
+          {filteredAppointments.filter(apt => new Date(apt.date).toDateString() === new Date(selectedDate).toDateString()).map((appointment) => (
             <div key={appointment.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
@@ -392,29 +300,29 @@ export default function AppointmentsPage() {
                     <div className="space-y-2">
                       <div className="flex items-center text-sm">
                         <User className="h-4 w-4 mr-2 text-gray-400" />
-                        <span className="font-medium">{appointment.client}</span>
+                        <span className="font-medium">{appointment.client.name}</span>
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
-                        <span className="ml-6">Mascota: {appointment.pet} ({appointment.breed})</span>
+                        <span className="ml-6">Mascota: {appointment.pet.name} ({appointment.pet.breed})</span>
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <Scissors className="h-4 w-4 mr-2 text-gray-400" />
-                        {appointment.service}
+                        {appointment.service.name}
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <div className="flex items-center text-sm text-gray-600">
                         <Phone className="h-4 w-4 mr-2 text-gray-400" />
-                        {appointment.phone}
+                        {appointment.client.phoneNumber}
                       </div>
                       <div className="flex items-center text-sm text-gray-600">
                         <Mail className="h-4 w-4 mr-2 text-gray-400" />
-                        {appointment.email}
+                        {appointment.client.email}
                       </div>
                       <div className="text-sm text-gray-600">
-                        <span className="font-medium">Duración:</span> {appointment.duration} min |
-                        <span className="font-medium"> Precio:</span> ${appointment.price}
+                        <span className="font-medium">Duración:</span> {appointment.service.duration} min |
+                        <span className="font-medium"> Precio:</span> ${appointment.service.price}
                       </div>
                     </div>
                   </div>
@@ -447,7 +355,7 @@ export default function AppointmentsPage() {
               </div>
             </div>
           ))}
-          {filteredAppointments.filter(apt => apt.date === selectedDate).length === 0 && (
+          {filteredAppointments.filter(apt => new Date(apt.date).toDateString() === new Date(selectedDate).toDateString()).length === 0 && (
             <div className="text-center py-8 text-gray-500">
               No hay citas programadas para esta fecha
             </div>
@@ -499,7 +407,7 @@ export default function AppointmentsPage() {
               <Calendar className="h-4 w-4 text-gray-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{appointments.filter(apt => apt.date === selectedDate).length}</div>
+              <div className="text-2xl font-bold">{appointments.filter(apt => new Date(apt.date).toDateString() === new Date(selectedDate).toDateString()).length}</div>
               <p className="text-xs text-gray-500">Para {selectedDate}</p>
             </CardContent>
           </Card>
@@ -529,7 +437,7 @@ export default function AppointmentsPage() {
               <Scissors className="h-4 w-4 text-purple-400" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${appointments.reduce((sum, apt) => sum + apt.price, 0)}</div>
+              <div className="text-2xl font-bold">${appointments.reduce((sum, apt) => sum + apt.service.price, 0)}</div>
               <p className="text-xs text-gray-500">{appointments.length} servicios</p>
             </CardContent>
           </Card>
