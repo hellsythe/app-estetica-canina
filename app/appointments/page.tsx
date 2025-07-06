@@ -151,11 +151,11 @@ export default function AppointmentsPage() {
 
   const handleSaveAppointment = async (appointmentData: Appointment) => {
     if (selectedAppointment.id) {
-      // Update existing appointment
       await updateAppointment(selectedAppointment.id, appointmentData);
+      toast.success('Cita actualizada correctamente');
     } else {
-      // Add new appointment
       await createAppointment(appointmentData);
+      toast.success('Cita guardada correctamente');
     }
   };
 

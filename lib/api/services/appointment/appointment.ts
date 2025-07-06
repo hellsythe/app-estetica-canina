@@ -4,7 +4,7 @@ export class Appointment {
   clientId: string = "";
   petId: string = "";
   serviceId: string = "";
-  date: string = "";
+  date: string = new Date().toISOString().split('T')[0];
   time: string = "";
   duration: number = 0;
   price: number = 0;

@@ -158,7 +158,11 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
       console.log(formData);
       await onSave(appointmentData);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
+      console.log(error.errors);
+      if (error?.errors) {
+        setErrors(error.errors);
+      }
       toast.error('Error al guardar cita');
     }
   };
@@ -172,7 +176,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              {appointment ? 'Editar Cita' : 'Agendar Nueva Cita'}
+              {appointment.id ? 'Editar Cita' : 'Agendar Nueva Cita'}
             </CardTitle>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="h-4 w-4" />
@@ -285,15 +289,11 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
                               <div className="space-y-1">
                                 <div className="flex items-center text-blue-800">
                                   <Phone className="h-3 w-3 mr-2" />
-                                  {selectedClient.phone}
+                                  {selectedClient.phoneNumber}
                                 </div>
                                 <div className="flex items-center text-blue-800">
                                   <Mail className="h-3 w-3 mr-2" />
                                   {selectedClient.email}
-                                </div>
-                                <div className="flex items-center text-blue-800">
-                                  <MapPin className="h-3 w-3 mr-2" />
-                                  {selectedClient.address}
                                 </div>
                               </div>
                               <div className="space-y-1">
@@ -506,7 +506,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
                     <option value="">Asignar automáticamente</option>
                     {employees.map(employee => (
                       <option key={employee.id} value={employee.name}>
-                        {employee.name} - {employee.position}
+                        {employee.name}
                       </option>
                     ))}
                   </select>
