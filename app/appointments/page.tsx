@@ -418,7 +418,7 @@ export default function AppointmentsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{appointments.filter(apt => apt.status === 'Confirmado').length}</div>
-              <p className="text-xs text-gray-500">67% del total</p>
+              {/* <p className="text-xs text-gray-500">67% del total</p> */}
             </CardContent>
           </Card>
           <Card>
@@ -428,7 +428,6 @@ export default function AppointmentsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{appointments.filter(apt => apt.status === 'En Proceso').length}</div>
-              <p className="text-xs text-gray-500">Luna - Corte de Uñas</p>
             </CardContent>
           </Card>
           <Card>
