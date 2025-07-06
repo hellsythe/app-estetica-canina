@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import SaleConfirmationModal from '@/components/pos/SaleConfirmationModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -52,6 +53,7 @@ export default function POSPage() {
   const [clientSearchTerm, setClientSearchTerm] = useState('');
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [showNewClientForm, setShowNewClientForm] = useState(false);
+  const [showSaleConfirmation, setShowSaleConfirmation] = useState(false);
   const [newClientData, setNewClientData] = useState({
     name: '',
     email: '',
@@ -238,13 +240,26 @@ export default function POSPage() {
       return;
     }
 
-    // Aquí implementarías la lógica para procesar la venta
-    toast.success(`Venta procesada por $${total.toFixed(2)}`);
+    setShowSaleConfirmation(true);
+  };
 
-    // Limpiar después de procesar
-    setCart([]);
-    setSelectedClient(null);
-    setClientSearchTerm('');
+  const handleConfirmSale = async (saleData: any) => {
+    try {
+      // Aquí enviarías los datos al backend
+      console.log('Datos de venta:', saleData);
+      
+      // Simular llamada al backend
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast.success(`Venta procesada exitosamente - ${saleData.saleNumber}`);
+      
+      // Limpiar después de procesar
+      setCart([]);
+      setSelectedClient(null);
+      setClientSearchTerm('');
+    } catch (error) {
+      toast.error('Error al procesar la venta');
+    }
   };
 
   return (
@@ -614,6 +629,17 @@ export default function POSPage() {
             </Button>
           </div>
         </div>
+
+        {/* Sale Confirmation Modal */}
+        <SaleConfirmationModal
+          isOpen={showSaleConfirmation}
+          onClose={() => setShowSaleConfirmation(false)}
+          onConfirm={handleConfirmSale}
+          cart={cart}
+          selectedClient={selectedClient}
+          subtotal={subtotal}
+          total={total}
+        />
       </div>
     </DashboardLayout>
   );
