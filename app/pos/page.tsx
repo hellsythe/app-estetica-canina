@@ -18,6 +18,11 @@ import {
   Receipt,
   User,
   Package,
+  X,
+  Check,
+  Phone,
+  Mail,
+  MapPin
 } from 'lucide-react';
 import { useServices } from '@/hooks/useService';
 import { useProducts } from '@/hooks/useProduct';
@@ -32,18 +37,44 @@ interface CartItem {
   type: 'service' | 'product';
 }
 
+interface SelectedClient {
+  id: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  address?: string;
+}
+
 export default function POSPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [selectedClient, setSelectedClient] = useState<string>('');
+  const [selectedClient, setSelectedClient] = useState<SelectedClient | null>(null);
+  const [clientSearchTerm, setClientSearchTerm] = useState('');
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const [showNewClientForm, setShowNewClientForm] = useState(false);
+  const [newClientData, setNewClientData] = useState({
+    name: '',
+    email: '',
+    phoneNumber: '',
+    address: ''
+  });
+  const [newClientErrors, setNewClientErrors] = useState<any>({});
+
   const { services } = useServices();
   const { products } = useProducts();
-  const { clients } = useClients();
+  const { clients, createClient } = useClients();
 
   const allItems = [...services, ...products];
 
   const filteredItems = allItems.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Filtrar clientes basado en el término de búsqueda
+  const filteredClients = clients.filter(client =>
+    client.name.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+    client.email?.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+    client.phoneNumber.includes(clientSearchTerm)
   );
 
   const addToCart = (item: typeof allItems[0]) => {
@@ -77,9 +108,7 @@ export default function POSPage() {
   const total = subtotal;
 
   const clearCart = () => {
-
-
-      toast((t) => (
+    toast((t) => (
       <div className="flex flex-col gap-4 p-2">
         <p className="font-semibold">¿Estás seguro de que quieres limpiar el carrito?</p>
         <div className="flex justify-end gap-2">
@@ -95,11 +124,12 @@ export default function POSPage() {
             size="sm"
             onClick={() => {
               setCart([]);
-              setSelectedClient('');
+              setSelectedClient(null);
+              setClientSearchTerm('');
               toast.dismiss(t.id);
             }}
           >
-            Eliminar
+            Limpiar
           </Button>
         </div>
       </div>
@@ -113,7 +143,108 @@ export default function POSPage() {
         boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
       },
     });
+  };
 
+  const handleClientSearch = (value: string) => {
+    setClientSearchTerm(value);
+    setShowClientDropdown(value.length > 0);
+    setShowNewClientForm(false);
+    
+    // Si está buscando, limpiar la selección actual
+    if (selectedClient && !value.includes(selectedClient.name)) {
+      setSelectedClient(null);
+    }
+  };
+
+  const handleClientSelect = (client: any) => {
+    setSelectedClient({
+      id: client.id,
+      name: client.name,
+      email: client.email || '',
+      phoneNumber: client.phoneNumber,
+      address: client.address || ''
+    });
+    setClientSearchTerm(client.name);
+    setShowClientDropdown(false);
+    setShowNewClientForm(false);
+  };
+
+  const handleNewClientChange = (field: string, value: string) => {
+    setNewClientData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    if (newClientErrors[field]) {
+      setNewClientErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
+  };
+
+  const validateNewClient = () => {
+    const errors: any = {};
+
+    if (!newClientData.name.trim()) {
+      errors.name = 'El nombre es requerido';
+    }
+
+    if (!newClientData.phoneNumber.trim()) {
+      errors.phoneNumber = 'El teléfono es requerido';
+    }
+
+    if (newClientData.email && !/\S+@\S+\.\S+/.test(newClientData.email)) {
+      errors.email = 'Email inválido';
+    }
+
+    setNewClientErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleCreateNewClient = async () => {
+    if (validateNewClient()) {
+      try {
+        const newClient = await createClient({
+          ...newClientData,
+          pets: [],
+          notes: '',
+          status: 'Activo'
+        });
+
+        setSelectedClient({
+          id: newClient.id,
+          name: newClient.name,
+          email: newClient.email || '',
+          phoneNumber: newClient.phoneNumber,
+          address: newClient.address || ''
+        });
+        
+        setClientSearchTerm(newClient.name);
+        setShowNewClientForm(false);
+        setShowClientDropdown(false);
+        setNewClientData({ name: '', email: '', phoneNumber: '', address: '' });
+        
+        toast.success('Cliente creado exitosamente');
+      } catch (error) {
+        toast.error('Error al crear el cliente');
+      }
+    }
+  };
+
+  const handleProcessSale = () => {
+    if (cart.length === 0) {
+      toast.error('El carrito está vacío');
+      return;
+    }
+
+    // Aquí implementarías la lógica para procesar la venta
+    toast.success(`Venta procesada por $${total.toFixed(2)}`);
+    
+    // Limpiar después de procesar
+    setCart([]);
+    setSelectedClient(null);
+    setClientSearchTerm('');
   };
 
   return (
@@ -130,10 +261,6 @@ export default function POSPage() {
               <Trash2 className="h-4 w-4 mr-2" />
               Limpiar
             </Button>
-            {/* <Button className="bg-green-600 hover:bg-green-700">
-              <Receipt className="h-4 w-4 mr-2" />
-              Imprimir Ticket
-            </Button> */}
           </div>
         </div>
 
@@ -187,11 +314,233 @@ export default function POSPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Input
-                  placeholder="Buscar cliente..."
-                  value={selectedClient}
-                  onChange={(e) => setSelectedClient(e.target.value)}
-                />
+                <div className="space-y-4">
+                  {/* Client Search */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                    <Input
+                      placeholder="Buscar cliente por nombre, email o teléfono..."
+                      value={clientSearchTerm}
+                      onChange={(e) => handleClientSearch(e.target.value)}
+                      onFocus={() => clientSearchTerm && setShowClientDropdown(true)}
+                      className="pl-10"
+                    />
+                    {selectedClient && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                        onClick={() => {
+                          setSelectedClient(null);
+                          setClientSearchTerm('');
+                          setShowClientDropdown(false);
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Client Dropdown */}
+                  {showClientDropdown && !selectedClient && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-64 overflow-y-auto">
+                      {filteredClients.length > 0 ? (
+                        <>
+                          {filteredClients.map(client => (
+                            <div
+                              key={client.id}
+                              className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                              onClick={() => handleClientSelect(client)}
+                            >
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <h4 className="font-medium text-gray-900">{client.name}</h4>
+                                  <div className="space-y-1">
+                                    <div className="flex items-center text-sm text-gray-600">
+                                      <Phone className="h-3 w-3 mr-1" />
+                                      {client.phoneNumber}
+                                    </div>
+                                    {client.email && (
+                                      <div className="flex items-center text-sm text-gray-600">
+                                        <Mail className="h-3 w-3 mr-1" />
+                                        {client.email}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                          <div className="p-3 border-t border-gray-200">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                              onClick={() => {
+                                setShowNewClientForm(true);
+                                setShowClientDropdown(false);
+                                setNewClientData({
+                                  name: clientSearchTerm,
+                                  email: '',
+                                  phoneNumber: '',
+                                  address: ''
+                                });
+                              }}
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Agregar nuevo cliente
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="p-3">
+                          <p className="text-sm text-gray-500 mb-3">No se encontraron clientes</p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full"
+                            onClick={() => {
+                              setShowNewClientForm(true);
+                              setShowClientDropdown(false);
+                              setNewClientData({
+                                name: clientSearchTerm,
+                                email: '',
+                                phoneNumber: '',
+                                address: ''
+                              });
+                            }}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Crear cliente "{clientSearchTerm}"
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Selected Client Info */}
+                  {selectedClient && (
+                    <Card className="bg-blue-50 border-blue-200">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-blue-900">{selectedClient.name}</h4>
+                            <div className="space-y-1 mt-2">
+                              <div className="flex items-center text-sm text-blue-800">
+                                <Phone className="h-3 w-3 mr-2" />
+                                {selectedClient.phoneNumber}
+                              </div>
+                              {selectedClient.email && (
+                                <div className="flex items-center text-sm text-blue-800">
+                                  <Mail className="h-3 w-3 mr-2" />
+                                  {selectedClient.email}
+                                </div>
+                              )}
+                              {selectedClient.address && (
+                                <div className="flex items-center text-sm text-blue-800">
+                                  <MapPin className="h-3 w-3 mr-2" />
+                                  {selectedClient.address}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* New Client Form */}
+                  {showNewClientForm && (
+                    <Card className="border-green-200 bg-green-50">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-sm text-green-800">Nuevo Cliente</CardTitle>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setShowNewClientForm(false);
+                              setNewClientData({ name: '', email: '', phoneNumber: '', address: '' });
+                              setNewClientErrors({});
+                            }}
+                            className="h-6 w-6 p-0"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div>
+                          <Input
+                            placeholder="Nombre completo *"
+                            value={newClientData.name}
+                            onChange={(e) => handleNewClientChange('name', e.target.value)}
+                            className={newClientErrors.name ? 'border-red-500' : ''}
+                          />
+                          {newClientErrors.name && (
+                            <p className="text-red-500 text-xs mt-1">{newClientErrors.name}</p>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <Input
+                            placeholder="Teléfono *"
+                            value={newClientData.phoneNumber}
+                            onChange={(e) => handleNewClientChange('phoneNumber', e.target.value)}
+                            className={newClientErrors.phoneNumber ? 'border-red-500' : ''}
+                          />
+                          {newClientErrors.phoneNumber && (
+                            <p className="text-red-500 text-xs mt-1">{newClientErrors.phoneNumber}</p>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <Input
+                            placeholder="Email (opcional)"
+                            type="email"
+                            value={newClientData.email}
+                            onChange={(e) => handleNewClientChange('email', e.target.value)}
+                            className={newClientErrors.email ? 'border-red-500' : ''}
+                          />
+                          {newClientErrors.email && (
+                            <p className="text-red-500 text-xs mt-1">{newClientErrors.email}</p>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <Input
+                            placeholder="Dirección (opcional)"
+                            value={newClientData.address}
+                            onChange={(e) => handleNewClientChange('address', e.target.value)}
+                          />
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => {
+                              setShowNewClientForm(false);
+                              setNewClientData({ name: '', email: '', phoneNumber: '', address: '' });
+                              setNewClientErrors({});
+                            }}
+                          >
+                            Cancelar
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="flex-1 bg-green-600 hover:bg-green-700"
+                            onClick={handleCreateNewClient}
+                          >
+                            <Check className="h-4 w-4 mr-1" />
+                            Crear
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
@@ -266,6 +615,7 @@ export default function POSPage() {
             <Button
               className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-lg"
               disabled={cart.length === 0}
+              onClick={handleProcessSale}
             >
               <ShoppingCart className="h-5 w-5 mr-2" />
               Procesar Venta
