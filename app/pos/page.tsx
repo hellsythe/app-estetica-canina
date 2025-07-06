@@ -6,11 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
-  ShoppingCart, 
-  Plus, 
+import {
+  ShoppingCart,
+  Plus,
   Minus,
-  Search, 
+  Search,
   Trash2,
   Calculator,
   CreditCard,
@@ -18,11 +18,14 @@ import {
   Receipt,
   User,
   Package,
-  DollarSign
 } from 'lucide-react';
+import { useServices } from '@/hooks/useService';
+import { useProducts } from '@/hooks/useProduct';
+import toast from 'react-hot-toast';
+import { useClients } from '@/hooks/useClient';
 
 interface CartItem {
-  id: number;
+  id: string;
   name: string;
   price: number;
   quantity: number;
@@ -33,22 +36,9 @@ export default function POSPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedClient, setSelectedClient] = useState<string>('');
-
-  const services = [
-    { id: 1, name: 'Baño y Corte Completo', price: 45, type: 'service' as const },
-    { id: 2, name: 'Baño Básico', price: 25, type: 'service' as const },
-    { id: 3, name: 'Corte de Uñas', price: 15, type: 'service' as const },
-    { id: 4, name: 'Tratamiento Antipulgas', price: 35, type: 'service' as const },
-    { id: 5, name: 'Corte Estilizado', price: 55, type: 'service' as const },
-  ];
-
-  const products = [
-    { id: 6, name: 'Champú Antipulgas', price: 18, type: 'product' as const },
-    { id: 7, name: 'Acondicionador Premium', price: 22, type: 'product' as const },
-    { id: 8, name: 'Collar Antiparasitario', price: 12, type: 'product' as const },
-    { id: 9, name: 'Juguete Mordedor', price: 8, type: 'product' as const },
-    { id: 10, name: 'Correa Retráctil', price: 25, type: 'product' as const },
-  ];
+  const { services } = useServices();
+  const { products } = useProducts();
+  const { clients } = useClients();
 
   const allItems = [...services, ...products];
 
@@ -69,11 +59,11 @@ export default function POSPage() {
     }
   };
 
-  const removeFromCart = (id: number) => {
+  const removeFromCart = (id: string) => {
     setCart(cart.filter(item => item.id !== id));
   };
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = (id: string, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(id);
     } else {
@@ -84,12 +74,46 @@ export default function POSPage() {
   };
 
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const tax = subtotal * 0.16; // 16% IVA
-  const total = subtotal + tax;
+  const total = subtotal;
 
   const clearCart = () => {
-    setCart([]);
-    setSelectedClient('');
+
+
+      toast((t) => (
+      <div className="flex flex-col gap-4 p-2">
+        <p className="font-semibold">¿Estás seguro de que quieres limpiar el carrito?</p>
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => toast.dismiss(t.id)}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => {
+              setCart([]);
+              setSelectedClient('');
+              toast.dismiss(t.id);
+            }}
+          >
+            Eliminar
+          </Button>
+        </div>
+      </div>
+    ), {
+      duration: 5000,
+      position: 'top-center',
+      style: {
+        background: '#fff',
+        padding: '1rem',
+        borderRadius: '0.5rem',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      },
+    });
+
   };
 
   return (
@@ -106,10 +130,10 @@ export default function POSPage() {
               <Trash2 className="h-4 w-4 mr-2" />
               Limpiar
             </Button>
-            <Button className="bg-green-600 hover:bg-green-700">
+            {/* <Button className="bg-green-600 hover:bg-green-700">
               <Receipt className="h-4 w-4 mr-2" />
               Imprimir Ticket
-            </Button>
+            </Button> */}
           </div>
         </div>
 
@@ -226,23 +250,9 @@ export default function POSPage() {
 
             {/* Total */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="h-5 w-5" />
-                  Total
-                </CardTitle>
-              </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Subtotal:</span>
-                    <span>${subtotal.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>IVA (16%):</span>
-                    <span>${tax.toFixed(2)}</span>
-                  </div>
-                  <div className="border-t pt-2">
+                  <div className="pt-2 mt-6">
                     <div className="flex justify-between font-bold text-lg">
                       <span>Total:</span>
                       <span>${total.toFixed(2)}</span>
@@ -252,35 +262,8 @@ export default function POSPage() {
               </CardContent>
             </Card>
 
-            {/* Payment Methods */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Método de Pago</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <Button 
-                    className="w-full justify-start" 
-                    variant="outline"
-                    disabled={cart.length === 0}
-                  >
-                    <Banknote className="h-4 w-4 mr-2" />
-                    Efectivo
-                  </Button>
-                  <Button 
-                    className="w-full justify-start" 
-                    variant="outline"
-                    disabled={cart.length === 0}
-                  >
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Tarjeta
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Process Sale */}
-            <Button 
+            <Button
               className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-lg"
               disabled={cart.length === 0}
             >
