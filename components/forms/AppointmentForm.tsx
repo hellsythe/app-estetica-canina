@@ -19,7 +19,9 @@ import {
   MapPin,
   Heart,
   Filter,
-  Users
+  Users,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { useClients } from '@/hooks/useClient';
 import { useServices } from '@/hooks/useService';
@@ -34,6 +36,16 @@ interface AppointmentFormProps {
   onSave: (appointment: any) => void;
 }
 
+interface Pet {
+  id?: number;
+  name: string;
+  breed: string;
+  age: string;
+  weight?: string;
+  color?: string;
+  notes?: string;
+}
+
 export default function AppointmentForm({ isOpen, onClose, appointment, onSave }: AppointmentFormProps) {
   const [formData, setFormData] = useState<Appointment>(appointment);
 
@@ -42,10 +54,21 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
   const [clientSearchTerm, setClientSearchTerm] = useState('');
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
+  const [showAddPetForm, setShowAddPetForm] = useState(false);
+  const [newPetData, setNewPetData] = useState<Pet>({
+    name: '',
+    breed: '',
+    age: '',
+    weight: '',
+    color: '',
+    notes: ''
+  });
+  const [petErrors, setPetErrors] = useState<any>({});
+
   const { clients, createClient } = useClients();
   const { services } = useServices();
   const { employees } = useEmployees();
-
 
   const timeSlots = [
     '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
@@ -83,6 +106,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
     // Si está buscando, limpiar la selección actual
     if (selectedClient && !value.includes(selectedClient.name)) {
       setSelectedClient(null);
+      setSelectedPet(null);
       setFormData(prev => ({
         ...prev,
         clientName: value,
@@ -99,24 +123,94 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
     setClientSearchTerm(client.name);
     setShowClientDropdown(false);
     setIsNewClient(false);
+    setSelectedPet(null); // Reset pet selection
 
     setFormData(prev => ({
       ...prev,
       clientName: client.name,
-      clientPhone: client.phone,
+      clientPhone: client.phoneNumber,
       clientEmail: client.email,
-      // No auto-seleccionar mascota si tiene múltiples
-      petName: client.pets.length === 1 ? client.pets[0].name : '',
-      petBreed: client.pets.length === 1 ? client.pets[0].breed : ''
+      petName: '',
+      petBreed: ''
     }));
   };
 
   const handlePetSelect = (pet: any) => {
+    setSelectedPet(pet);
     setFormData(prev => ({
       ...prev,
       petName: pet.name,
       petBreed: pet.breed
     }));
+  };
+
+  const handleNewPetChange = (field: string, value: string) => {
+    setNewPetData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+
+    if (petErrors[field]) {
+      setPetErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
+  };
+
+  const validateNewPet = () => {
+    const newErrors: any = {};
+
+    if (!newPetData.name.trim()) {
+      newErrors.name = 'El nombre de la mascota es requerido';
+    }
+
+    if (!newPetData.breed.trim()) {
+      newErrors.breed = 'La raza es requerida';
+    }
+
+    setPetErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleAddNewPet = async () => {
+    if (!validateNewPet()) return;
+
+    try {
+      // Crear una nueva mascota para el cliente seleccionado
+      const updatedPets = [...selectedClient.pets, { ...newPetData, id: Date.now() }];
+      
+      // Actualizar el cliente con la nueva mascota
+      const updatedClientData = {
+        ...selectedClient,
+        pets: updatedPets
+      };
+
+      // Aquí deberías actualizar el cliente en el backend
+      // await updateClient(selectedClient.id, updatedClientData);
+
+      // Actualizar el estado local
+      setSelectedClient(updatedClientData);
+      
+      // Seleccionar automáticamente la nueva mascota
+      handlePetSelect(newPetData);
+      
+      // Limpiar el formulario de nueva mascota
+      setNewPetData({
+        name: '',
+        breed: '',
+        age: '',
+        weight: '',
+        color: '',
+        notes: ''
+      });
+      setShowAddPetForm(false);
+      setPetErrors({});
+
+      toast.success('Mascota agregada exitosamente');
+    } catch (error) {
+      toast.error('Error al agregar la mascota');
+    }
   };
 
   const handleServiceSelect = (service: any) => {
@@ -152,14 +246,13 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
         breed: formData.petBreed,
         price: Number(formData.price),
         duration: Number(formData.duration),
-        clientInfo: selectedClient
+        clientInfo: selectedClient,
+        petInfo: selectedPet
       };
-      console.log(appointmentData);
-      console.log(formData);
+      
       await onSave(appointmentData);
       onClose();
     } catch (error: any) {
-      console.log(error.errors);
       if (error?.errors) {
         setErrors(error.errors);
       }
@@ -196,6 +289,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
                   onClick={() => {
                     setIsNewClient(!isNewClient);
                     setSelectedClient(null);
+                    setSelectedPet(null);
                     setClientSearchTerm('');
                     setShowClientDropdown(false);
                   }}
@@ -310,34 +404,6 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
                       </CardContent>
                     </Card>
                   )}
-
-                  {/* Pet Selection for Selected Client */}
-                  {selectedClient && selectedClient.pets.length > 1 && (
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Seleccionar Mascota</label>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {selectedClient.pets.map((pet: any, index: number) => (
-                          <Card
-                            key={index}
-                            className={`cursor-pointer transition-colors ${
-                              formData.petName === pet.name ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'
-                            }`}
-                            onClick={() => handlePetSelect(pet)}
-                          >
-                            <CardContent className="p-3">
-                              <div className="flex items-center space-x-3">
-                                <Heart className="h-4 w-4 text-red-500" />
-                                <div>
-                                  <h4 className="font-medium">{pet.name}</h4>
-                                  <p className="text-sm text-gray-600">{pet.breed} - {pet.age}</p>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -376,32 +442,199 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
               )}
             </div>
 
-            {/* Pet Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Mascota</h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Nombre de la Mascota *</label>
-                  <Input
-                    value={formData.petName}
-                    onChange={(e) => handleInputChange('petName', e.target.value)}
-                    placeholder="Ej: Max"
-                    className={errors.petName ? 'border-red-500' : ''}
-                  />
-                  {errors.petName && <p className="text-red-500 text-xs mt-1">{errors.petName}</p>}
+            {/* Pet Selection */}
+            {selectedClient && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-gray-900">Seleccionar Mascota</h3>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAddPetForm(!showAddPetForm)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Agregar Mascota
+                  </Button>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Raza</label>
-                  <Input
-                    value={formData.petBreed}
-                    onChange={(e) => handleInputChange('petBreed', e.target.value)}
-                    placeholder="Ej: Golden Retriever"
-                  />
+                {/* Add New Pet Form */}
+                {showAddPetForm && (
+                  <Card className="border-green-200 bg-green-50">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm text-green-800">Nueva Mascota para {selectedClient.name}</CardTitle>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setShowAddPetForm(false);
+                            setNewPetData({
+                              name: '',
+                              breed: '',
+                              age: '',
+                              weight: '',
+                              color: '',
+                              notes: ''
+                            });
+                            setPetErrors({});
+                          }}
+                          className="h-6 w-6 p-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                          <Input
+                            placeholder="Nombre de la mascota *"
+                            value={newPetData.name}
+                            onChange={(e) => handleNewPetChange('name', e.target.value)}
+                            className={petErrors.name ? 'border-red-500' : ''}
+                          />
+                          {petErrors.name && <p className="text-red-500 text-xs mt-1">{petErrors.name}</p>}
+                        </div>
+
+                        <div>
+                          <Input
+                            placeholder="Raza *"
+                            value={newPetData.breed}
+                            onChange={(e) => handleNewPetChange('breed', e.target.value)}
+                            className={petErrors.breed ? 'border-red-500' : ''}
+                          />
+                          {petErrors.breed && <p className="text-red-500 text-xs mt-1">{petErrors.breed}</p>}
+                        </div>
+
+                        <div>
+                          <Input
+                            placeholder="Edad (ej: 3 años)"
+                            value={newPetData.age}
+                            onChange={(e) => handleNewPetChange('age', e.target.value)}
+                          />
+                        </div>
+
+                        <div>
+                          <Input
+                            placeholder="Peso (ej: 15 kg)"
+                            value={newPetData.weight}
+                            onChange={(e) => handleNewPetChange('weight', e.target.value)}
+                          />
+                        </div>
+
+                        <div>
+                          <Input
+                            placeholder="Color"
+                            value={newPetData.color}
+                            onChange={(e) => handleNewPetChange('color', e.target.value)}
+                          />
+                        </div>
+
+                        <div>
+                          <Input
+                            placeholder="Notas especiales"
+                            value={newPetData.notes}
+                            onChange={(e) => handleNewPetChange('notes', e.target.value)}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowAddPetForm(false)}
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={handleAddNewPet}
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Agregar Mascota
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Pet Selection Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {selectedClient.pets.map((pet: any, index: number) => (
+                    <Card
+                      key={index}
+                      className={`cursor-pointer transition-colors ${
+                        selectedPet?.name === pet.name ? 'border-blue-500 bg-blue-50' : 'hover:bg-gray-50'
+                      }`}
+                      onClick={() => handlePetSelect(pet)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center space-x-3 flex-1">
+                            <Heart className="h-5 w-5 text-red-500 flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-medium text-gray-900 truncate">{pet.name}</h4>
+                              <p className="text-sm text-gray-600 truncate">{pet.breed}</p>
+                              {pet.age && <p className="text-xs text-gray-500">{pet.age}</p>}
+                            </div>
+                          </div>
+                          {selectedPet?.name === pet.name && (
+                            <div className="flex-shrink-0 ml-2">
+                              <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {selectedClient.pets.length === 0 && !showAddPetForm && (
+                  <div className="text-center py-6 text-gray-500">
+                    <Heart className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                    <p>Este cliente no tiene mascotas registradas</p>
+                    <p className="text-sm">Haz clic en "Agregar Mascota" para registrar una</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Manual Pet Information for New Clients */}
+            {(isNewClient || !selectedClient) && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">Información de la Mascota</h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Nombre de la Mascota *</label>
+                    <Input
+                      value={formData.petName}
+                      onChange={(e) => handleInputChange('petName', e.target.value)}
+                      placeholder="Ej: Max"
+                      className={errors.petName ? 'border-red-500' : ''}
+                    />
+                    {errors.petName && <p className="text-red-500 text-xs mt-1">{errors.petName}</p>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Raza</label>
+                    <Input
+                      value={formData.petBreed}
+                      onChange={(e) => handleInputChange('petBreed', e.target.value)}
+                      placeholder="Ej: Golden Retriever"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Service Selection */}
             <div className="space-y-4">
