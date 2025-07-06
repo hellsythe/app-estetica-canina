@@ -27,6 +27,9 @@ import {
   CalendarDays,
   Trash2
 } from 'lucide-react';
+import { useAppointments } from '@/hooks/useAppointments';
+import { Appointment } from '@/lib/api/services/appointment/appointment';
+import toast from 'react-hot-toast';
 
 export default function AppointmentsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -34,100 +37,101 @@ export default function AppointmentsPage() {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [currentMonth, setCurrentMonth] = useState(new Date(2024, 0, 15)); // January 2024
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const { appointments, createAppointment, updateAppointment, deleteAppointment } = useAppointments();
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment>(new Appointment());
 
-  const [appointments, setAppointments] = useState([
-    {
-      id: 1,
-      client: 'María González',
-      pet: 'Max',
-      breed: 'Golden Retriever',
-      service: 'Baño y Corte Completo',
-      date: '2024-01-15',
-      time: '10:00 AM',
-      duration: 90,
-      price: 45,
-      status: 'Confirmado',
-      phone: '+1 (555) 123-4567',
-      email: 'maria.gonzalez@email.com',
-      notes: 'Mascota muy tranquila, le gusta el agua tibia'
-    },
-    {
-      id: 2,
-      client: 'Carlos Ruiz',
-      pet: 'Luna',
-      breed: 'Poodle',
-      service: 'Corte de Uñas',
-      date: '2024-01-15',
-      time: '11:30 AM',
-      duration: 20,
-      price: 15,
-      status: 'En Proceso',
-      phone: '+1 (555) 234-5678',
-      email: 'carlos.ruiz@email.com',
-      notes: 'Primera vez, puede estar nerviosa'
-    },
-    {
-      id: 3,
-      client: 'Ana Martínez',
-      pet: 'Rocky',
-      breed: 'Pastor Alemán',
-      service: 'Baño Medicinal',
-      date: '2024-01-15',
-      time: '2:00 PM',
-      duration: 60,
-      price: 35,
-      status: 'Pendiente',
-      phone: '+1 (555) 345-6789',
-      email: 'ana.martinez@email.com',
-      notes: 'Tratamiento para dermatitis'
-    },
-    {
-      id: 4,
-      client: 'Luis Fernández',
-      pet: 'Toby',
-      breed: 'Beagle',
-      service: 'Baño y Corte Completo',
-      date: '2024-01-16',
-      time: '3:30 PM',
-      duration: 90,
-      price: 45,
-      status: 'Confirmado',
-      phone: '+1 (555) 456-7890',
-      email: 'luis.fernandez@email.com',
-      notes: 'Cliente regular'
-    },
-    {
-      id: 5,
-      client: 'Carmen Silva',
-      pet: 'Bella',
-      breed: 'Labrador',
-      service: 'Corte Estilizado',
-      date: '2024-01-17',
-      time: '4:00 PM',
-      duration: 120,
-      price: 55,
-      status: 'Confirmado',
-      phone: '+1 (555) 567-8901',
-      email: 'carmen.silva@email.com',
-      notes: 'Corte especial para competencia'
-    },
-    {
-      id: 6,
-      client: 'Roberto Díaz',
-      pet: 'Zeus',
-      breed: 'Rottweiler',
-      service: 'Baño Básico',
-      date: '2024-01-18',
-      time: '10:00 AM',
-      duration: 45,
-      price: 25,
-      status: 'Pendiente',
-      phone: '+1 (555) 678-9012',
-      email: 'roberto.diaz@email.com',
-      notes: 'Perro grande, necesita espacio'
-    }
-  ]);
+  // const [appointments, setAppointments] = useState([
+  //   {
+  //     id: 1,
+  //     client: 'María González',
+  //     pet: 'Max',
+  //     breed: 'Golden Retriever',
+  //     service: 'Baño y Corte Completo',
+  //     date: '2024-01-15',
+  //     time: '10:00 AM',
+  //     duration: 90,
+  //     price: 45,
+  //     status: 'Confirmado',
+  //     phone: '+1 (555) 123-4567',
+  //     email: 'maria.gonzalez@email.com',
+  //     notes: 'Mascota muy tranquila, le gusta el agua tibia'
+  //   },
+  //   {
+  //     id: 2,
+  //     client: 'Carlos Ruiz',
+  //     pet: 'Luna',
+  //     breed: 'Poodle',
+  //     service: 'Corte de Uñas',
+  //     date: '2024-01-15',
+  //     time: '11:30 AM',
+  //     duration: 20,
+  //     price: 15,
+  //     status: 'En Proceso',
+  //     phone: '+1 (555) 234-5678',
+  //     email: 'carlos.ruiz@email.com',
+  //     notes: 'Primera vez, puede estar nerviosa'
+  //   },
+  //   {
+  //     id: 3,
+  //     client: 'Ana Martínez',
+  //     pet: 'Rocky',
+  //     breed: 'Pastor Alemán',
+  //     service: 'Baño Medicinal',
+  //     date: '2024-01-15',
+  //     time: '2:00 PM',
+  //     duration: 60,
+  //     price: 35,
+  //     status: 'Pendiente',
+  //     phone: '+1 (555) 345-6789',
+  //     email: 'ana.martinez@email.com',
+  //     notes: 'Tratamiento para dermatitis'
+  //   },
+  //   {
+  //     id: 4,
+  //     client: 'Luis Fernández',
+  //     pet: 'Toby',
+  //     breed: 'Beagle',
+  //     service: 'Baño y Corte Completo',
+  //     date: '2024-01-16',
+  //     time: '3:30 PM',
+  //     duration: 90,
+  //     price: 45,
+  //     status: 'Confirmado',
+  //     phone: '+1 (555) 456-7890',
+  //     email: 'luis.fernandez@email.com',
+  //     notes: 'Cliente regular'
+  //   },
+  //   {
+  //     id: 5,
+  //     client: 'Carmen Silva',
+  //     pet: 'Bella',
+  //     breed: 'Labrador',
+  //     service: 'Corte Estilizado',
+  //     date: '2024-01-17',
+  //     time: '4:00 PM',
+  //     duration: 120,
+  //     price: 55,
+  //     status: 'Confirmado',
+  //     phone: '+1 (555) 567-8901',
+  //     email: 'carmen.silva@email.com',
+  //     notes: 'Corte especial para competencia'
+  //   },
+  //   {
+  //     id: 6,
+  //     client: 'Roberto Díaz',
+  //     pet: 'Zeus',
+  //     breed: 'Rottweiler',
+  //     service: 'Baño Básico',
+  //     date: '2024-01-18',
+  //     time: '10:00 AM',
+  //     duration: 45,
+  //     price: 25,
+  //     status: 'Pendiente',
+  //     phone: '+1 (555) 678-9012',
+  //     email: 'roberto.diaz@email.com',
+  //     notes: 'Perro grande, necesita espacio'
+  //   }
+  // ]);
 
   const filteredAppointments = appointments.filter(appointment =>
     appointment.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -136,32 +140,61 @@ export default function AppointmentsPage() {
   );
 
   const handleAddAppointment = () => {
-    setSelectedAppointment(null);
+    setSelectedAppointment(new Appointment());
     setIsFormOpen(true);
   };
 
-  const handleEditAppointment = (appointment: any) => {
+  const handleEditAppointment = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setIsFormOpen(true);
   };
 
-  const handleSaveAppointment = (appointmentData: any) => {
-    if (selectedAppointment) {
+  const handleSaveAppointment = async (appointmentData: Appointment) => {
+    if (selectedAppointment.id) {
       // Update existing appointment
-      setAppointments(prev => prev.map(apt =>
-        apt.id === appointmentData.id ? appointmentData : apt
-      ));
+      await updateAppointment(selectedAppointment.id, appointmentData);
     } else {
       // Add new appointment
-      setAppointments(prev => [...prev, appointmentData]);
+      await createAppointment(appointmentData);
     }
   };
 
-  const handleDeleteAppointment = (id: number) => {
-    if (confirm('¿Estás seguro de que quieres eliminar esta cita?')) {
-      setAppointments(prev => prev.filter(apt => apt.id !== id));
-    }
-  };
+    const handleDeleteAppointment = (id: string) => {
+      toast((t) => (
+        <div className="flex flex-col gap-4 p-2">
+          <p className="font-semibold">¿Estás seguro de que quieres eliminar esta cita?</p>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => toast.dismiss(t.id)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                deleteAppointment(id);
+                toast.dismiss(t.id);
+                toast.success('Cita eliminada correctamente');
+              }}
+            >
+              Eliminar
+            </Button>
+          </div>
+        </div>
+      ), {
+        duration: 5000,
+        position: 'top-center',
+        style: {
+          background: '#fff',
+          padding: '1rem',
+          borderRadius: '0.5rem',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        },
+      });
+    };
 
   const getStatusColor = (status: string) => {
     switch (status) {

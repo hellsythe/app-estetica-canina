@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
+import {
   X,
   Save,
   Calendar,
@@ -21,6 +21,11 @@ import {
   Filter,
   Users
 } from 'lucide-react';
+import { useClients } from '@/hooks/useClient';
+import { useServices } from '@/hooks/useService';
+import { useEmployees } from '@/hooks/useEmployees';
+import toast from 'react-hot-toast';
+import { Appointment } from '@/lib/api/services/appointment/appointment';
 
 interface AppointmentFormProps {
   isOpen: boolean;
@@ -30,127 +35,17 @@ interface AppointmentFormProps {
 }
 
 export default function AppointmentForm({ isOpen, onClose, appointment, onSave }: AppointmentFormProps) {
-  const [formData, setFormData] = useState({
-    clientName: appointment?.client || '',
-    clientPhone: appointment?.clientPhone || '',
-    clientEmail: appointment?.clientEmail || '',
-    petName: appointment?.pet || '',
-    petBreed: appointment?.breed || '',
-    service: appointment?.service || '',
-    date: appointment?.date || new Date().toISOString().split('T')[0],
-    time: appointment?.time || '10:00',
-    duration: appointment?.duration || 90,
-    price: appointment?.price || '',
-    status: appointment?.status || 'Pendiente',
-    notes: appointment?.notes || '',
-    employee: appointment?.employee || ''
-  });
+  const [formData, setFormData] = useState<Appointment>(appointment);
 
   const [errors, setErrors] = useState<any>({});
   const [isNewClient, setIsNewClient] = useState(false);
   const [clientSearchTerm, setClientSearchTerm] = useState('');
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const { clients, createClient } = useClients();
+  const { services } = useServices();
+  const { employees } = useEmployees();
 
-  // Mock data - in real app, this would come from your database
-  const clients = [
-    { 
-      id: 1, 
-      name: 'María González', 
-      phone: '+1 (555) 123-4567', 
-      email: 'maria.gonzalez@email.com',
-      address: 'Calle Principal 123, Ciudad',
-      pets: [
-        { name: 'Max', breed: 'Golden Retriever', age: '3 años' },
-        { name: 'Bella', breed: 'Labrador', age: '2 años' }
-      ],
-      lastVisit: '2024-01-10',
-      totalVisits: 12,
-      status: 'VIP'
-    },
-    { 
-      id: 2, 
-      name: 'Carlos Ruiz', 
-      phone: '+1 (555) 234-5678', 
-      email: 'carlos.ruiz@email.com',
-      address: 'Avenida Central 456, Ciudad',
-      pets: [
-        { name: 'Luna', breed: 'Poodle', age: '4 años' }
-      ],
-      lastVisit: '2024-01-08',
-      totalVisits: 8,
-      status: 'Activo'
-    },
-    { 
-      id: 3, 
-      name: 'Ana Martínez', 
-      phone: '+1 (555) 345-6789', 
-      email: 'ana.martinez@email.com',
-      address: 'Boulevard Norte 789, Ciudad',
-      pets: [
-        { name: 'Rocky', breed: 'Pastor Alemán', age: '5 años' },
-        { name: 'Coco', breed: 'Chihuahua', age: '1 año' }
-      ],
-      lastVisit: '2024-01-05',
-      totalVisits: 15,
-      status: 'VIP'
-    },
-    { 
-      id: 4, 
-      name: 'Luis Fernández', 
-      phone: '+1 (555) 456-7890', 
-      email: 'luis.fernandez@email.com',
-      address: 'Calle Sur 321, Ciudad',
-      pets: [
-        { name: 'Toby', breed: 'Beagle', age: '2 años' }
-      ],
-      lastVisit: '2023-12-20',
-      totalVisits: 5,
-      status: 'Inactivo'
-    },
-    { 
-      id: 5, 
-      name: 'Carmen Silva', 
-      phone: '+1 (555) 567-8901', 
-      email: 'carmen.silva@email.com',
-      address: 'Avenida Este 654, Ciudad',
-      pets: [
-        { name: 'Milo', breed: 'Schnauzer', age: '6 años' },
-        { name: 'Kira', breed: 'Border Collie', age: '3 años' }
-      ],
-      lastVisit: '2024-01-12',
-      totalVisits: 20,
-      status: 'VIP'
-    },
-    { 
-      id: 6, 
-      name: 'Roberto Díaz', 
-      phone: '+1 (555) 678-9012', 
-      email: 'roberto.diaz@email.com',
-      address: 'Calle Oeste 987, Ciudad',
-      pets: [
-        { name: 'Zeus', breed: 'Rottweiler', age: '4 años' }
-      ],
-      lastVisit: '2024-01-01',
-      totalVisits: 3,
-      status: 'Activo'
-    }
-  ];
-
-  const services = [
-    { id: 1, name: 'Baño y Corte Completo', duration: 90, price: 45 },
-    { id: 2, name: 'Baño Básico', duration: 45, price: 25 },
-    { id: 3, name: 'Corte de Uñas', duration: 20, price: 15 },
-    { id: 4, name: 'Spa Canino', duration: 180, price: 85 },
-    { id: 5, name: 'Corte Estilizado', duration: 120, price: 55 },
-    { id: 6, name: 'Tratamiento Antipulgas', duration: 60, price: 35 }
-  ];
-
-  const employees = [
-    { id: 1, name: 'Ana García', position: 'Groomer Senior' },
-    { id: 2, name: 'Carlos Mendez', position: 'Groomer Junior' },
-    { id: 3, name: 'Miguel Torres', position: 'Groomer Senior' }
-  ];
 
   const timeSlots = [
     '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
@@ -162,8 +57,8 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
   // Filtrar clientes basado en el término de búsqueda
   const filteredClients = clients.filter(client =>
     client.name.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
-    client.phone.includes(clientSearchTerm) ||
-    client.email.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
+    client.phoneNumber.includes(clientSearchTerm) ||
+    client.email?.toLowerCase().includes(clientSearchTerm.toLowerCase()) ||
     client.pets.some(pet => pet.name.toLowerCase().includes(clientSearchTerm.toLowerCase()))
   );
 
@@ -172,7 +67,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
       ...prev,
       [field]: value
     }));
-    
+
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
@@ -184,7 +79,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
   const handleClientSearch = (value: string) => {
     setClientSearchTerm(value);
     setShowClientDropdown(value.length > 0);
-    
+
     // Si está buscando, limpiar la selección actual
     if (selectedClient && !value.includes(selectedClient.name)) {
       setSelectedClient(null);
@@ -204,7 +99,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
     setClientSearchTerm(client.name);
     setShowClientDropdown(false);
     setIsNewClient(false);
-    
+
     setFormData(prev => ({
       ...prev,
       clientName: client.name,
@@ -246,48 +141,12 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
     }
   };
 
-  const validateForm = () => {
-    const newErrors: any = {};
-
-    if (!formData.clientName.trim()) {
-      newErrors.clientName = 'El nombre del cliente es requerido';
-    }
-
-    if (!formData.clientPhone.trim()) {
-      newErrors.clientPhone = 'El teléfono es requerido';
-    }
-
-    if (!formData.petName.trim()) {
-      newErrors.petName = 'El nombre de la mascota es requerido';
-    }
-
-    if (!formData.service.trim()) {
-      newErrors.service = 'Debe seleccionar un servicio';
-    }
-
-    if (!formData.date) {
-      newErrors.date = 'La fecha es requerida';
-    }
-
-    if (!formData.time) {
-      newErrors.time = 'La hora es requerida';
-    }
-
-    if (!formData.price.trim()) {
-      newErrors.price = 'El precio es requerido';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (validateForm()) {
+
+    try {
       const appointmentData = {
         ...formData,
-        id: appointment?.id || Date.now(),
         client: formData.clientName,
         pet: formData.petName,
         breed: formData.petBreed,
@@ -295,9 +154,12 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
         duration: Number(formData.duration),
         clientInfo: selectedClient
       };
-      
-      onSave(appointmentData);
+      console.log(appointmentData);
+      console.log(formData);
+      await onSave(appointmentData);
       onClose();
+    } catch (error) {
+      toast.error('Error al guardar cita');
     }
   };
 
@@ -384,7 +246,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
                                 <div className="space-y-1">
                                   <div className="flex items-center text-sm text-gray-600">
                                     <Phone className="h-3 w-3 mr-1" />
-                                    {client.phone}
+                                    {client.phoneNumber}
                                   </div>
                                   <div className="flex items-center text-sm text-gray-600">
                                     <Mail className="h-3 w-3 mr-1" />
@@ -517,7 +379,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
             {/* Pet Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">Mascota</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Nombre de la Mascota *</label>
@@ -544,7 +406,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
             {/* Service Selection */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">Servicio</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {services.map(service => (
                   <Card
@@ -574,7 +436,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
             {/* Date and Time */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">Fecha y Hora</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Fecha *</label>
@@ -632,7 +494,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
             {/* Additional Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-900">Información Adicional</h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">Empleado Asignado</label>
@@ -685,7 +547,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
               </Button>
               <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
                 <Save className="h-4 w-4 mr-2" />
-                {appointment ? 'Actualizar' : 'Agendar'} Cita
+                {appointment.id ? 'Actualizar' : 'Agendar'} Cita
               </Button>
             </div>
           </form>

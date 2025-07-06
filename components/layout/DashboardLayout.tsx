@@ -62,8 +62,8 @@ const navigation = [
   // { name: 'Redes Sociales', href: '/social-sharing', icon: Share2, module: 'social-sharing' },
   // { name: 'Facturación', href: '/billing', icon: Receipt, module: 'billing' },
   // { name: 'Reportes', href: '/reports', icon: BarChart3, module: 'reports' },
-  // { name: 'Corte de Caja', href: '/cash-register', icon: Calculator, module: 'cash-register' },
-  // { name: 'Configuración', href: '/settings', icon: Settings, module: 'settings' },
+  { name: 'Corte de Caja', href: '/cash-register', icon: Calculator, module: 'cash-register' },
+  { name: 'Configuración', href: '/settings', icon: Settings, module: 'settings' },
 ];
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {

@@ -36,8 +36,8 @@ export const verifyToken = (token: string): AuthToken | null => {
     const decoded = JSON.parse(atob(token.split('.')[1])) as AuthToken;
 
     // Verificar si el token ha expirado
-    if (decoded.exp < Date.now()) {
-      // return null;
+    if (decoded.exp < Math.floor(Date.now() / 1000)) {
+      return null;
     }
 
 
