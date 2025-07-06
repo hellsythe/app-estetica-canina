@@ -179,7 +179,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
     try {
       // Crear una nueva mascota para el cliente seleccionado
       const updatedPets = [...selectedClient.pets, { ...newPetData, id: Date.now() }];
-      
+
       // Actualizar el cliente con la nueva mascota
       const updatedClientData = {
         ...selectedClient,
@@ -191,10 +191,10 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
 
       // Actualizar el estado local
       setSelectedClient(updatedClientData);
-      
+
       // Seleccionar automáticamente la nueva mascota
       handlePetSelect(newPetData);
-      
+
       // Limpiar el formulario de nueva mascota
       setNewPetData({
         name: '',
@@ -249,7 +249,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
         clientInfo: selectedClient,
         petInfo: selectedPet
       };
-      
+
       await onSave(appointmentData);
       onClose();
     } catch (error: any) {
@@ -608,7 +608,7 @@ export default function AppointmentForm({ isOpen, onClose, appointment, onSave }
             )}
 
             {/* Manual Pet Information for New Clients */}
-            {(isNewClient || !selectedClient) && (
+            {(isNewClient) && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-gray-900">Información de la Mascota</h3>
 
