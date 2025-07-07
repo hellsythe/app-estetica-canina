@@ -14,58 +14,36 @@ import {
   Search,
   Trash2,
   Calculator,
-  CreditCard,
-  Banknote,
-  Receipt,
   User,
   Package,
   X,
   Check,
   Phone,
   Mail,
-  MapPin
 } from 'lucide-react';
 import { useServices } from '@/hooks/useService';
 import { useProducts } from '@/hooks/useProduct';
 import toast from 'react-hot-toast';
 import { useClients } from '@/hooks/useClient';
-
-interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  type: 'service' | 'product';
-}
-
-interface SelectedClient {
-  id: string;
-  name: string;
-  email: string;
-  phoneNumber: string;
-  address?: string;
-}
+import { Client } from '@/lib/api/services/client/client';
+import { CartItem } from '@/lib/api/services/sale/sale';
+import { useSales } from '@/hooks/useSale';
 
 export default function POSPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [selectedClient, setSelectedClient] = useState<SelectedClient | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [clientSearchTerm, setClientSearchTerm] = useState('');
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [showNewClientForm, setShowNewClientForm] = useState(false);
   const [showSaleConfirmation, setShowSaleConfirmation] = useState(false);
-  const [newClientData, setNewClientData] = useState({
-    name: '',
-    email: '',
-    phoneNumber: '',
-    address: ''
-  });
+  const [newClientData, setNewClientData] = useState(new Client());
   const [newClientErrors, setNewClientErrors] = useState<any>({});
 
   const { services } = useServices();
   const { products } = useProducts();
   const { clients, createClient } = useClients();
-
+  const { createSale } = useSales();
   const allItems = [...services, ...products];
 
   const filteredItems = allItems.filter(item =>
@@ -159,13 +137,7 @@ export default function POSPage() {
   };
 
   const handleClientSelect = (client: any) => {
-    setSelectedClient({
-      id: client.id,
-      name: client.name,
-      email: client.email || '',
-      phoneNumber: client.phoneNumber,
-      address: client.address || ''
-    });
+    setSelectedClient(client);
     setClientSearchTerm(client.name);
     setShowClientDropdown(false);
     setShowNewClientForm(false);
@@ -214,18 +186,11 @@ export default function POSPage() {
           status: 'Activo'
         });
 
-        setSelectedClient({
-          id: newClient.id,
-          name: newClient.name,
-          email: newClient.email || '',
-          phoneNumber: newClient.phoneNumber,
-          address: newClient.address || ''
-        });
-
+        setSelectedClient(newClient);
         setClientSearchTerm(newClient.name);
         setShowNewClientForm(false);
         setShowClientDropdown(false);
-        setNewClientData({ name: '', email: '', phoneNumber: '', address: '' });
+        setNewClientData(new Client());
 
         toast.success('Cliente creado exitosamente');
       } catch (error) {
@@ -247,16 +212,16 @@ export default function POSPage() {
     try {
       // Aquí enviarías los datos al backend
       console.log('Datos de venta:', saleData);
-      
+
+     await createSale(saleData);
+
       // Simular llamada al backend
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       toast.success(`Venta procesada exitosamente - ${saleData.saleNumber}`);
-      
+
       // Limpiar después de procesar
-      setCart([]);
-      setSelectedClient(null);
-      setClientSearchTerm('');
+     setCart([]);
+     setSelectedClient(null);
+     setClientSearchTerm('');
     } catch (error) {
       toast.error('Error al procesar la venta');
     }
@@ -449,12 +414,6 @@ export default function POSPage() {
                                 <div className="flex items-center text-sm text-blue-800">
                                   <Mail className="h-3 w-3 mr-2" />
                                   {selectedClient.email}
-                                </div>
-                              )}
-                              {selectedClient.address && (
-                                <div className="flex items-center text-sm text-blue-800">
-                                  <MapPin className="h-3 w-3 mr-2" />
-                                  {selectedClient.address}
                                 </div>
                               )}
                             </div>

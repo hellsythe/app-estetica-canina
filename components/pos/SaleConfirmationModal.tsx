@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { 
+import {
   X,
   Receipt,
   User,
@@ -16,9 +15,7 @@ import {
   Banknote,
   Download,
   Printer,
-  Send,
   Check,
-  Calculator,
   Package,
   Scissors
 } from 'lucide-react';
@@ -45,7 +42,7 @@ interface SaleConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (saleData: any) => void;
-  cart: CartItem[];
+  cart: any[];
   selectedClient: SelectedClient | null;
   subtotal: number;
   total: number;
@@ -68,20 +65,20 @@ export default function SaleConfirmationModal({
   const change = parseFloat(amountPaid) - total;
   const saleNumber = `VENTA-${Date.now()}`;
   const currentDate = new Date().toLocaleDateString('es-ES');
-  const currentTime = new Date().toLocaleTimeString('es-ES', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
+  const currentTime = new Date().toLocaleTimeString('es-ES', {
+    hour: '2-digit',
+    minute: '2-digit'
   });
 
   const handleConfirmSale = async () => {
     setIsProcessing(true);
-    
+
     const saleData = {
       saleNumber,
       date: currentDate,
       time: currentTime,
       client: selectedClient,
-      items: cart,
+      cart: cart,
       subtotal,
       total,
       paymentMethod,
@@ -92,9 +89,9 @@ export default function SaleConfirmationModal({
 
     try {
       // Aquí enviarías los datos al backend
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simular llamada API
-      
-      onConfirm(saleData);
+      // await new Promise(resolve => setTimeout(resolve, 1000)); // Simular llamada API
+
+      await onConfirm(saleData);
       onClose();
     } catch (error) {
       console.error('Error al procesar la venta:', error);
@@ -183,7 +180,7 @@ export default function SaleConfirmationModal({
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Resumen de Venta</h3>
-                
+
                 {/* Información del Cliente */}
                 {selectedClient ? (
                   <Card className="bg-blue-50 border-blue-200 mb-4">
@@ -272,7 +269,7 @@ export default function SaleConfirmationModal({
                 {/* Método de Pago */}
                 <div className="space-y-4">
                   <h4 className="font-medium text-gray-900">Método de Pago</h4>
-                  
+
                   <div className="grid grid-cols-2 gap-3">
                     <Card
                       className={`cursor-pointer transition-colors ${
@@ -466,8 +463,8 @@ export default function SaleConfirmationModal({
             <Button variant="outline" onClick={onClose} disabled={isProcessing}>
               Cancelar
             </Button>
-            <Button 
-              onClick={handleConfirmSale} 
+            <Button
+              onClick={handleConfirmSale}
               className="bg-green-600 hover:bg-green-700"
               disabled={isProcessing || (paymentMethod === 'Efectivo' && parseFloat(amountPaid) < total)}
             >
