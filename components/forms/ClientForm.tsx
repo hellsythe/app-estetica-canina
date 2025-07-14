@@ -293,7 +293,7 @@ export default function ClientForm({ isOpen, onClose, client, onSave }: ClientFo
               </Button>
               <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
                 <Save className="h-4 w-4 mr-2" />
-                {client ? 'Actualizar' : 'Guardar'} Cliente
+                {client.id ? 'Actualizar' : 'Guardar'} Cliente
               </Button>
             </div>
           </form>
