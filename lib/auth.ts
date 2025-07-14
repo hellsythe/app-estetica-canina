@@ -72,6 +72,7 @@ export const modulePermissions = {
   'social-sharing': ['admin', 'manager'],
   billing: ['admin', 'manager'],
   reports: ['admin', 'manager'],
+  'pension': ['admin', 'manager', 'employee'],
   'cash-register': ['admin', 'manager'],
   settings: ['admin'],
   profile: ['admin', 'manager', 'employee'] // Todos pueden acceder a su perfil

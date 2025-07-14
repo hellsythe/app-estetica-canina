@@ -35,7 +35,8 @@ import {
   Clock,
   CheckCircle,
   MessageCircle,
-  DollarSign
+  DollarSign,
+  Home
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,6 +63,7 @@ const navigation = [
   // { name: 'Redes Sociales', href: '/social-sharing', icon: Share2, module: 'social-sharing' },
   // { name: 'Facturación', href: '/billing', icon: Receipt, module: 'billing' },
   // { name: 'Reportes', href: '/reports', icon: BarChart3, module: 'reports' },
+  { name: 'Pensión', href: '/pension', icon: Home, module: 'pension' },
   { name: 'Corte de Caja', href: '/cash-register', icon: Calculator, module: 'cash-register' },
   { name: 'Configuración', href: '/settings', icon: Settings, module: 'settings' },
 ];
